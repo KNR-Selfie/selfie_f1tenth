@@ -10,6 +10,6 @@ Header header
 #
 float32 steering_angle # virtual steering angle (radians)
 
-# Speed measured at the center of the rear axle.
+# Angular speed measured at the center of the rear axle.
 #
-float32 speed # forward speed (m/s)
+float32 angular_speed # forward speed (rad/s)
