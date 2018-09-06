@@ -1,11 +1,11 @@
 #include "ros/ros.h"
 #include "sensor_msgs/Imu.h"
 #include "std_msgs/Float32.h"
+#include "ackermann_msgs/AckermannDriveStamped.h"
 #include "usb.hpp"
 #include <sstream>
 
 USB_STM Usb;
-
 
 int main(int argc, char **argv){
 
@@ -13,12 +13,14 @@ int main(int argc, char **argv){
    ros::NodeHandle n;
    ros::Publisher imu_publisher = n.advertise<sensor_msgs::Imu>("data_raw", 100);
    ros::Publisher velo_publisher = n.advertise<std_msgs::Float32>("float32", 50);
+   //ros::Subscriber ackerman_subscriber = n.subscribe("chatter", 1000, Usb.ackermanCallback);
    ros::Rate loop_rate(10);
       
    int count = 0;
 
    //usb communication
    //usb_read 
+   uint32_t timestamp=1;
    float velocity=1;
    float quaternion_x=1; 
    float quaternion_y=1;
@@ -36,24 +38,14 @@ int main(int argc, char **argv){
    uint8_t stm_reset=1;
    uint8_t lights=1;
 
-   //usb_send  
-   data_container to_send;  
-   float velocity_to_send = 1;
-   float angle_to_send = 2;
-   uint8_t flag1_to_send = 3;
-   uint8_t flag2_to_send = 4;
-   uint8_t flag3_to_send = 5;
-
    //usb receive data
    Usb.init();
   
    while (ros::ok()){
-      //sending to usb
-      Usb.usb_data_pack(velocity_to_send, angle_to_send, flag1_to_send, flag2_to_send, flag3_to_send, &to_send);
-      Usb.send_buf(to_send);
       //reading from usb
       
-      Usb.usb_read_buffer(52,velocity, quaternion_x, quaternion_y, quaternion_z, quaternion_w, ang_vel_x, ang_vel_y, ang_vel_z, lin_acc_x, lin_acc_y, lin_acc_z, tf_mini,taranis_3_pos,taranis_reset_gear,stm_reset,lights);
+      Usb.usb_read_buffer(128, timestamp, velocity, quaternion_x, quaternion_y, quaternion_z,quaternion_w,ang_vel_x,  ang_vel_y, ang_vel_z, lin_acc_x, lin_acc_y, lin_acc_z, taranis_3_pos, taranis_reset_gear,stm_reset);
+      Usb.usb_send_buffer();
       
       //send to imu
       sensor_msgs::Imu imu_msg;
@@ -75,17 +67,15 @@ int main(int argc, char **argv){
       imu_msg.angular_velocity.z = ang_vel_z;
 
       imu_publisher.publish(imu_msg);
-      ROS_INFO("%f", imu_msg.orientation.z);
       //send to float32
       std_msgs::Float32 velo_msg;
       velo_msg.data = velocity;
       velo_publisher.publish(velo_msg);
 
-      //ROS_INFO("Angle: %f Velo: %f",quaternion_z,velocity);
 
+      
       ros::spinOnce();
   
-      loop_rate.sleep();
       ++count;
     }
     return 0;
