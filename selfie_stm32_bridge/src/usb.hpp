@@ -17,7 +17,7 @@ struct data_container
 {
     const uint8_t start = 0xFF;
     const uint8_t code = 0xAA;
-    uint8_t length = 23;
+    uint8_t length = 27;
     const uint8_t stop = 0xFE;
 };
 

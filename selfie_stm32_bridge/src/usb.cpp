@@ -128,7 +128,7 @@ struct UsbFrame_s {
 	uint8_t endbyte;
     } __attribute__ ((__packed__));
     union UsbFrame_u {
-	unsigned char bytes[27];
+	unsigned char bytes[31];
 	struct UsbFrame_s frame;
     } Data;
         Data.frame.startbyte = control.commands.start;
@@ -144,7 +144,7 @@ struct UsbFrame_s {
         Data.frame.flag2 = flag2;
         Data.frame.flag3 = flag3;
         Data.frame.endbyte = control.commands.stop;
-	write(fd,&Data.bytes,27);
+	write(fd,&Data.bytes,31);
 }
 
 
