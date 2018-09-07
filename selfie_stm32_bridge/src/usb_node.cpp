@@ -7,19 +7,20 @@
 
 USB_STM Usb;
 
+void ackermanCallback(const ackermann_msgs::AckermannDrive::ConstPtr& msg);
+
 int main(int argc, char **argv){
 
    ros::init(argc, argv, "selfie_stm32_bridge");
    ros::NodeHandle n;
-   ros::Publisher imu_publisher = n.advertise<sensor_msgs::Imu>("data_raw", 100);
-   ros::Publisher velo_publisher = n.advertise<std_msgs::Float32>("float32", 50);
-   //ros::Subscriber ackerman_subscriber = n.subscribe("chatter", 1000, Usb.ackermanCallback);
+   ros::Publisher imu_publisher = n.advertise<sensor_msgs::Imu>("imu", 100);
+   ros::Publisher velo_publisher = n.advertise<std_msgs::Float32>("speed", 50);
+   ros::Subscriber ackerman_subscriber = n.subscribe("drive", 1000, ackermanCallback);
    ros::Rate loop_rate(10);
       
    int count = 0;
 
-   //usb communication
-   //usb_read 
+   //usb communication - read
    uint32_t timestamp=1;
    float velocity=1;
    float quaternion_x=1; 
@@ -38,15 +39,17 @@ int main(int argc, char **argv){
    uint8_t stm_reset=1;
    uint8_t lights=1;
 
-   //usb receive data
    Usb.init();
-  
+   ros::Time begin = ros::Time::now();
+
    while (ros::ok()){
-      //reading from usb
-      
+      ros::Time now = ros::Time::now();
+      uint32_t send_ms = (now.sec - begin.sec)*1000 + (now.nsec/1000000);
+      ROS_INFO("Time %d",send_ms);
+
       Usb.usb_read_buffer(128, timestamp, velocity, quaternion_x, quaternion_y, quaternion_z,quaternion_w,ang_vel_x,  ang_vel_y, ang_vel_z, lin_acc_x, lin_acc_y, lin_acc_z, taranis_3_pos, taranis_reset_gear,stm_reset);
-      Usb.usb_send_buffer();
-      
+      Usb.usb_send_buffer(send_ms, Usb.control.steering_angle,Usb.control.steering_angle_velocity, Usb.control.speed, Usb.control.acceleration, Usb.control.jerk, Usb.control.flag1, Usb.control.flag2, Usb.control.flag3);
+
       //send to imu
       sensor_msgs::Imu imu_msg;
 
@@ -67,13 +70,12 @@ int main(int argc, char **argv){
       imu_msg.angular_velocity.z = ang_vel_z;
 
       imu_publisher.publish(imu_msg);
+
       //send to float32
       std_msgs::Float32 velo_msg;
       velo_msg.data = velocity;
       velo_publisher.publish(velo_msg);
-
-
-      
+     
       ros::spinOnce();
   
       ++count;
@@ -81,4 +83,11 @@ int main(int argc, char **argv){
     return 0;
 }
   
-
+void ackermanCallback(const ackermann_msgs::AckermannDrive::ConstPtr& msg){
+    Usb.control.steering_angle = msg->steering_angle;
+    Usb.control.steering_angle_velocity = msg->steering_angle_velocity;
+    Usb.control.speed = msg->speed;
+    Usb.control.acceleration = msg->acceleration;
+    Usb.control.jerk = msg->jerk;
+    ROS_INFO("I heard: [Steering_angle: %f Speed: %f]", Usb.control.steering_angle,Usb.control.speed);
+}

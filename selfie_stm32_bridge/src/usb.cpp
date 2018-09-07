@@ -1,29 +1,16 @@
 #include "usb.hpp"
 
-USB_STM::USB_STM()
-{
-
-    std::string name = "/dev/ttyACM0";
-    strcpy(&portname[0], name.c_str());
-}
 
 int USB_STM::init(int speed)
-{
-    // Try openning ports from ttyACM0 to ttyACM9
-
-    for(int i = 48; i < 49; i++)
+{           
+    char port[] = "/dev/serial/by-id/usb-KNR_Selfie_F7_00000000001A-if00";
+    fd = open(port, O_RDWR | O_NOCTTY | O_SYNC);
+    if (fd < 0)
+        std::cout << "Could not open serial communication on port: " << port << std::endl;
+    else
     {
-        //portname[11] = i;
-	char port[] = "/dev/ttyACM0";
-        fd = open(port, O_RDWR | O_NOCTTY | O_SYNC);
-        if (fd < 0)
-            std::cout << "Could not open serial communication on port: " << port << std::endl;
-        else
-        {
-            std::cout << "Opened serial communication on port: " << port << std::endl;
-            std::cout << "File descriptor: " << fd << std::endl;
-            break;
-        }
+        std::cout << "Opened serial communication on port: " << port << std::endl;
+        std::cout << "File descriptor: " << fd << std::endl;
     }
 
     if (fd < 0)
@@ -89,13 +76,15 @@ void USB_STM::usb_read_buffer(int buf_size, uint32_t& timestamp, float& velocity
 	uint8_t endByte;
     } __attribute__ ((__packed__));
     union UsbFrame_u {
-	unsigned char bytes[55];
+	unsigned char buffer[512];
 	struct UsbFrame_s frame;
     } Data;
 
-    int read_state = read(fd, &Data.bytes, 128) ;
+    int read_state = read(fd, &Data.buffer[0], 512) ;
 
- if(read_state == 55){
+ if(read_state == 55 && Data.frame.startbyte == 0xff 
+    && Data.frame.code == 0x40 && Data.frame.length == 51 
+    && Data.frame.endByte == 0xfe){
      //timestamp
      timestamp = Data.frame.timecode;
 
@@ -121,12 +110,13 @@ void USB_STM::usb_read_buffer(int buf_size, uint32_t& timestamp, float& velocity
 	}
 }
 
-void USB_STM::usb_send_buffer(){
+void USB_STM::usb_send_buffer(uint32_t timestamp_ms, float steering_angle,float steering_angle_velocity, float speed, float acceleration, float jerk, uint8_t flag1, uint8_t flag2, uint8_t flag3){
 
 struct UsbFrame_s {
 	uint8_t startbyte;
 	uint8_t code;
 	uint8_t length;
+    uint32_t timestamp_ms;
 	float steering_angle;
 	float steering_angle_velocity;
 	float speed;
@@ -138,32 +128,26 @@ struct UsbFrame_s {
 	uint8_t endbyte;
     } __attribute__ ((__packed__));
     union UsbFrame_u {
-	unsigned char bytes[23];
+	unsigned char bytes[27];
 	struct UsbFrame_s frame;
     } Data;
         Data.frame.startbyte = control.commands.start;
         Data.frame.code = control.commands.code;
         Data.frame.length = control.commands.length;
-	Data.frame.steering_angle = control.steering_angle;
-        Data.frame.steering_angle_velocity = control.steering_angle_velocity;
-        Data.frame.speed = control.speed;
-        Data.frame.acceleration = control.acceleration;
-        Data.frame.jerk = control.jerk;
-        Data.frame.flag1 = 0;
-        Data.frame.flag2 = 0;
-        Data.frame.flag3 = 0;
+        Data.frame.timestamp_ms = timestamp_ms;
+	    Data.frame.steering_angle = steering_angle;
+        Data.frame.steering_angle_velocity = steering_angle_velocity;
+        Data.frame.speed = speed;
+        Data.frame.acceleration = acceleration;
+        Data.frame.jerk = jerk;
+        Data.frame.flag1 = flag1;
+        Data.frame.flag2 = flag2;
+        Data.frame.flag3 = flag3;
         Data.frame.endbyte = control.commands.stop;
 	write(fd,&Data.bytes,27);
 }
 
-void USB_STM::ackermanCallback(const ackermann_msgs::AckermannDrive::ConstPtr& msg){
-    control.steering_angle = msg->steering_angle;
-    control.steering_angle_velocity = msg->steering_angle_velocity;
-    control.speed = msg->speed;
-    control.acceleration = msg->acceleration;
-    control.jerk = msg->jerk;
-    ROS_INFO("I heard: [%f]", msg->speed);
-}
+
 
 
 
