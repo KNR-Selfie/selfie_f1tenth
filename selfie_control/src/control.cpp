@@ -34,7 +34,7 @@ int main(int argc, char **argv){
 
       if (now.nsec - begin_angle.nsec > 1000000){
         begin_angle = ros::Time::now();
-        msg.steering_angle = msg.steering_angle + direction_angle*0.1;
+        msg.steering_angle = msg.steering_angle + direction_angle*0.1*3.14/180;
       }
 
       if (msg.speed>1){
@@ -43,10 +43,10 @@ int main(int argc, char **argv){
       else if (msg.speed<0.2){
         direction_speed = 1;
       }
-      if (msg.steering_angle > 40){
+      if (msg.steering_angle > 40*3.14/180){
         direction_angle = -1;
       }
-      if (msg.steering_angle < -40){
+      if (msg.steering_angle < -40*3.14/180){
         direction_angle = 1;
       }
       
