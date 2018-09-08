@@ -45,7 +45,7 @@ int main(int argc, char **argv){
    while (ros::ok()){
       ros::Time now = ros::Time::now();
       uint32_t send_ms = (now.sec - begin.sec)*1000 + (now.nsec/1000000);
-      ROS_INFO("Time %d",send_ms);
+      //ROS_INFO("Time %d",send_ms);
 
       Usb.usb_read_buffer(128, timestamp, velocity, quaternion_x, quaternion_y, quaternion_z,quaternion_w,ang_vel_x,  ang_vel_y, ang_vel_z, lin_acc_x, lin_acc_y, lin_acc_z, taranis_3_pos, taranis_reset_gear,stm_reset);
       Usb.usb_send_buffer(send_ms, Usb.control.steering_angle,Usb.control.steering_angle_velocity, Usb.control.speed, Usb.control.acceleration, Usb.control.jerk, Usb.control.flag1, Usb.control.flag2, Usb.control.flag3);
@@ -89,5 +89,5 @@ void ackermanCallback(const ackermann_msgs::AckermannDrive::ConstPtr& msg){
     Usb.control.speed = msg->speed;
     Usb.control.acceleration = msg->acceleration;
     Usb.control.jerk = msg->jerk;
-    ROS_INFO("I heard: [Steering_angle: %f Speed: %f]", Usb.control.steering_angle,Usb.control.speed);
+    //ROS_INFO("I heard: [Steering_angle: %1.1f Speed: %0.2f]", Usb.control.steering_angle,Usb.control.speed);
 }
