@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   ros::Publisher imu_publisher = n.advertise<sensor_msgs::Imu>("imu", 100);
   ros::Publisher velo_publisher = n.advertise<std_msgs::Float32>("speed", 50);
-  ros::Subscriber ackerman_subscriber = n.subscribe("drive", 1000, ackermanCallback);
+  ros::Subscriber ackerman_subscriber = n.subscribe("drive", 1, ackermanCallback);
 
   //usb communication - read
   uint32_t timestamp = 1;
