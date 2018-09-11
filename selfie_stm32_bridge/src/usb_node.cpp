@@ -16,11 +16,13 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   ros::Publisher imu_publisher = n.advertise<sensor_msgs::Imu>("imu", 100);
   ros::Publisher velo_publisher = n.advertise<std_msgs::Float32>("speed", 50);
+  ros::Publisher dis_publisher = n.advertise<std_msgs::Float32>("distance",50);
   ros::Subscriber ackerman_subscriber = n.subscribe("drive", 1, ackermanCallback);
 
   //usb communication - read
   uint32_t timestamp = 1;
   float velocity = 1;
+  uint32_t distance = 1;
   float quaternion_x = 1;
   float quaternion_y = 1;
   float quaternion_z = 1;
@@ -45,7 +47,7 @@ int main(int argc, char **argv)
     ros::Time now = ros::Time::now();
     uint32_t send_ms = (now.sec - begin.sec) * 1000 + (now.nsec / 1000000);
 
-    Usb.usb_read_buffer(128, timestamp, velocity, quaternion_x, quaternion_y, quaternion_z, quaternion_w, ang_vel_x,  ang_vel_y, ang_vel_z, lin_acc_x, lin_acc_y, lin_acc_z, taranis_3_pos, taranis_reset_gear, stm_reset);
+    Usb.usb_read_buffer(128, timestamp,distance, velocity, quaternion_x, quaternion_y, quaternion_z, quaternion_w, ang_vel_x,  ang_vel_y, ang_vel_z, lin_acc_x, lin_acc_y, lin_acc_z, taranis_3_pos, taranis_reset_gear, stm_reset);
     Usb.usb_send_buffer(send_ms, Usb.control.steering_angle, Usb.control.steering_angle_velocity, Usb.control.speed, Usb.control.acceleration, Usb.control.jerk, Usb.control.flag1, Usb.control.flag2, Usb.control.flag3);
 
     //send to imu
@@ -73,6 +75,10 @@ int main(int argc, char **argv)
     std_msgs::Float32 velo_msg;
     velo_msg.data = velocity;
     velo_publisher.publish(velo_msg);
+
+    std_msgs::Float32 dis_msg;
+    dis_msg.data = distance;
+    dis_publisher.publish(dis_msg);
 
     ros::spinOnce();
   }
