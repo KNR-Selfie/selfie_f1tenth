@@ -87,7 +87,7 @@ void USB_STM::usb_read_buffer(int buf_size, uint32_t& timestamp,uint32_t& distan
   int read_state = read(fd, &Data.buffer[0], 512) ;
 
   if (read_state == 59 && Data.frame.startbyte == 0xff
-      && Data.frame.code == 0x40 && Data.frame.length == 51
+      && Data.frame.code == 0x40 && Data.frame.length == 55
       && Data.frame.endByte == 0xfe)
   {
     //timestamp
@@ -154,8 +154,3 @@ void USB_STM::usb_send_buffer(uint32_t timestamp_ms, float steering_angle, float
   Data.frame.endbyte = control.commands.stop;
   write(fd, &Data.bytes, 31);
 }
-
-
-
-
-
