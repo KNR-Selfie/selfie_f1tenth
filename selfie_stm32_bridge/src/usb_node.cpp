@@ -22,7 +22,7 @@ int main(int argc, char **argv)
   //usb communication - read
   uint32_t timestamp = 1;
   float velocity = 1;
-  uint32_t distance = 1;
+  int32_t distance = 1;
   float quaternion_x = 1;
   float quaternion_y = 1;
   float quaternion_z = 1;
