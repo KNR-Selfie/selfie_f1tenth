@@ -23,6 +23,7 @@ int main(int argc, char **argv)
   uint32_t timestamp = 1;
   float velocity = 1;
   uint32_t distance = 1;
+
   float quaternion_x = 1;
   float quaternion_y = 1;
   float quaternion_z = 1;
@@ -48,6 +49,7 @@ int main(int argc, char **argv)
     uint32_t send_ms = (now.sec - begin.sec) * 1000 + (now.nsec / 1000000);
 
     Usb.usb_read_buffer(128, timestamp,distance, velocity, quaternion_x, quaternion_y, quaternion_z, quaternion_w, ang_vel_x,  ang_vel_y, ang_vel_z, lin_acc_x, lin_acc_y, lin_acc_z, taranis_3_pos, taranis_reset_gear, stm_reset);
+
     Usb.usb_send_buffer(send_ms, Usb.control.steering_angle, Usb.control.steering_angle_velocity, Usb.control.speed, Usb.control.acceleration, Usb.control.jerk, Usb.control.flag1, Usb.control.flag2, Usb.control.flag3);
 
     //send to imu

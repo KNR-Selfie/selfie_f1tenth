@@ -58,6 +58,7 @@ int USB_STM::init(int speed)
 }
 
 void USB_STM::usb_read_buffer(int buf_size, uint32_t& timestamp,uint32_t& distance, float& velocity, float& quaternion_x, float& quaternion_y, float& quaternion_z, float& quaternion_w, float& ang_vel_x, float& ang_vel_y, float& ang_vel_z, float& lin_acc_x, float& lin_acc_y, float& lin_acc_z, uint8_t& taranis_3_pos, uint8_t& taranis_reset_gear, uint8_t& stm_reset)
+
 {
 
   struct UsbFrame_s
@@ -68,6 +69,7 @@ void USB_STM::usb_read_buffer(int buf_size, uint32_t& timestamp,uint32_t& distan
 
     uint32_t timecode;
     uint32_t distance;
+
     float velocity;
     float quaternion[4];
     float rates[3];
@@ -86,8 +88,10 @@ void USB_STM::usb_read_buffer(int buf_size, uint32_t& timestamp,uint32_t& distan
 
   int read_state = read(fd, &Data.buffer[0], 512) ;
 
+
   if (read_state == 59 && Data.frame.startbyte == 0xff
-      && Data.frame.code == 0x40 && Data.frame.length == 51
+
+      && Data.frame.code == 0x40 && Data.frame.length == 55
       && Data.frame.endByte == 0xfe)
   {
     //timestamp
