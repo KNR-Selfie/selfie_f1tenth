@@ -11,11 +11,15 @@ int main(int argc, char **argv){
  
    ros::Rate loop_rate(10);
    int count = 0;
+   ros::Time start= ros::Time::now();
+   uint32_t start_time = (uint32_t)(start.sec*1000 + start.nsec/1000);
    ros::Time begin = ros::Time::now();
    ros::Time begin_angle = ros::Time::now();
+   uint32_t begin_time = (uint32_t)(begin_angle.sec*1000 + begin_angle.nsec/1000000);
+   uint32_t begin_time_angle = (uint32_t)(begin_angle.sec*1000 + begin_angle.nsec/100000);
 
    ackermann_msgs::AckermannDrive msg;
-   msg.steering_angle = 0;
+   msg.steering_angle = 40*3.14/180;
    msg.steering_angle_velocity=0;
    msg.speed=0;
    msg.acceleration=0.2;
@@ -26,14 +30,17 @@ int main(int argc, char **argv){
    while (ros::ok()){
   
       ros::Time now = ros::Time::now();
-      
-      if (now.sec - begin.sec > 1){
+      uint32_t now_time = (uint32_t)(now.sec*1000 + now.nsec/1000000);
+
+      if (now_time - begin_time > 1000){
         begin = ros::Time::now();
+        begin_time = (uint32_t)(begin.sec*1000 + begin.nsec/1000000);
         msg.speed = msg.speed + direction_speed*0.1;
       }
 
-      if (now.nsec - begin_angle.nsec > 1000000){
+      if (now_time - begin_time_angle> 100){
         begin_angle = ros::Time::now();
+        begin_time_angle = (uint32_t)(begin_angle.sec*1000 + begin_angle.nsec/1000000);
         msg.steering_angle = msg.steering_angle + direction_angle*0.1*3.14/180;
       }
 
@@ -50,9 +57,6 @@ int main(int argc, char **argv){
         direction_angle = 1;
       }
       
-
-      //ROS_INFO("petla",);
-  
       control_publisher.publish(msg);
   
       ros::spinOnce();
