@@ -19,9 +19,9 @@ int main(int argc, char **argv){
    uint32_t begin_time_angle = (uint32_t)(begin_angle.sec*1000 + begin_angle.nsec/100000);
 
    ackermann_msgs::AckermannDrive msg;
-   msg.steering_angle = 40*3.14/180;
+   msg.steering_angle = 0;
    msg.steering_angle_velocity=0;
-   msg.speed=0;
+   msg.speed=0*1000;
    msg.acceleration=0.2;
    msg.jerk=0;
    int8_t direction_speed = 1;
@@ -35,21 +35,22 @@ int main(int argc, char **argv){
       if (now_time - begin_time > 1000){
         begin = ros::Time::now();
         begin_time = (uint32_t)(begin.sec*1000 + begin.nsec/1000000);
-        msg.speed = msg.speed + direction_speed*0.1;
+        msg.speed = msg.speed + direction_speed*0.1*1000;
       }
 
       if (now_time - begin_time_angle> 100){
         begin_angle = ros::Time::now();
         begin_time_angle = (uint32_t)(begin_angle.sec*1000 + begin_angle.nsec/1000000);
-        msg.steering_angle = msg.steering_angle + direction_angle*0.1*3.14/180;
+        msg.steering_angle = msg.steering_angle + direction_angle*1*3.14/180;
       }
 
-      if (msg.speed>1){
+      if (msg.speed>2*1000){
         direction_speed = -1;
       }
-      else if (msg.speed<0.2){
+      else if (msg.speed<0.2*1000){
         direction_speed = 1;
       }
+
       if (msg.steering_angle > 40*3.14/180){
         direction_angle = -1;
       }
@@ -57,6 +58,7 @@ int main(int argc, char **argv){
         direction_angle = 1;
       }
       
+
       control_publisher.publish(msg);
   
       ros::spinOnce();
