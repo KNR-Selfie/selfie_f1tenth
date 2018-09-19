@@ -7,7 +7,7 @@
 
 USB_STM Usb;
 
-void ackermanCallback(const ackermann_msgs::AckermannDrive::ConstPtr& msg);
+void ackermanCallback(const ackermann_msgs::AckermannDriveStamped::ConstPtr& msg);
 
 int main(int argc, char **argv)
 {
@@ -85,11 +85,11 @@ int main(int argc, char **argv)
   }
 }
 
-void ackermanCallback(const ackermann_msgs::AckermannDrive::ConstPtr& msg)
+void ackermanCallback(const ackermann_msgs::AckermannDriveStamped::ConstPtr& msg)
 {
-  Usb.control.steering_angle = msg->steering_angle;
-  Usb.control.steering_angle_velocity = msg->steering_angle_velocity;
-  Usb.control.speed = msg->speed;
-  Usb.control.acceleration = msg->acceleration;
-  Usb.control.jerk = msg->jerk;
+  Usb.control.steering_angle = msg->drive.steering_angle;
+  Usb.control.steering_angle_velocity = msg->drive.steering_angle_velocity;
+  Usb.control.speed = msg->drive.speed;
+  Usb.control.acceleration = msg->drive.acceleration;
+  Usb.control.jerk = msg->drive.jerk;
 }
