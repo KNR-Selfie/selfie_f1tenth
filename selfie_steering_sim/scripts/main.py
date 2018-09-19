@@ -117,7 +117,7 @@ if __name__ == '__main__':
     drive_sub = rospy.Subscriber('drive', AckermannDriveStamped, handle_command, queue_size=1)
 
     # Configure topic publisher
-    odom_pub = rospy.Publisher('odom', Odometry, queue_size=UPDATE_RATE)
+    odom_pub = rospy.Publisher('sim/odom', Odometry, queue_size=UPDATE_RATE)
 
     # Configure transform broadcaster
     tf_br = tf.TransformBroadcaster()
