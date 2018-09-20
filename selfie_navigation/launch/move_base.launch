@@ -1,0 +1,19 @@
+<launch>
+   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+     <rosparam file="$(find selfie_navigation)/costmap_common_params.yaml" command="load" ns="global_costmap" />
+     <rosparam file="$(find selfie_navigation)/costmap_common_params.yaml" command="load" ns="local_costmap" />
+     <rosparam file="$(find selfie_navigation)/local_costmap_params.yaml" command="load" />
+     <rosparam file="$(find selfie_navigation)/global_costmap_params.yaml" command="load" />
+     <rosparam file="$(find selfie_navigation)/base_local_planner_params.yaml" command="load" />
+     <rosparam file="$(find selfie_navigation)/base_global_planner_params.yaml" command="load" />
+
+     <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+     <param name="recover_behavior_enabled" value="false" />
+     <param name="controller_frequency" value="10.0" />
+   </node>
+
+   <node pkg="teb_local_planner_tutorials" type="cmd_vel_to_ackermann_drive.py" name="cmd_converter">
+     <param name="wheelbase" value="0.235" />
+     <param name="ackermann_cmd_topic" value="drive" />
+   </node>
+</launch>
