@@ -4,7 +4,7 @@
 drive_control drive;
 
 void pathCallback(const nav_msgs::Path::ConstPtr& msg);
-float listen_tf(geometry_msgs::TransformStamped transformStamped, float& position_x, float& position_y, float& position_z, float& orientation_x,float& orientation_y,float& orientation_z, float& orientation_w );
+void listen_tf(geometry_msgs::TransformStamped transformStamped, float& position_x, float& position_y, float& position_z, float& orientation_x,float& orientation_y,float& orientation_z, float& orientation_w, float& yaw);
 
 int main(int argc, char** argv)
 {
@@ -23,7 +23,8 @@ int main(int argc, char** argv)
   drive.ackermann.speed = 0;
   drive.ackermann.acceleration = 0;
   drive.ackermann.jerk = 0;
-
+  float pid_out;
+  uint32_t counter= 0;
   while (ros::ok()){
     ros::spinOnce();
 
@@ -36,24 +37,32 @@ int main(int argc, char** argv)
       ROS_ERROR("%s",ex.what());
       ros::Duration(1.0).sleep();
     }
-    //check point that we have to go next
-    drive.check_target(drive.localization.position_x, drive.localization.position_y, drive.path.position_x, drive.path.position_y, drive.path.target_x, drive.path.target_y);
-    //gets data from tf
-    drive.localization.yaw = listen_tf(transformStamped,drive.localization.position_x,drive.localization.position_y,drive.localization.position_z,drive.localization.orientation_x,drive.localization.orientation_y, drive.localization.orientation_z, drive.localization.orientation_w);
-    //return theta - angle that we have to go
-    drive.pid.theta = drive.get_theta(drive.localization.position_x, drive.localization.position_y, drive.path.target_x, drive.path.target_y,drive.localization.yaw);
-    ROS_INFO("PID: %f",drive.pid.theta);
+    //get tf information
+    listen_tf(transformStamped,drive.localization.position_x,drive.localization.position_y,drive.localization.position_z,drive.localization.orientation_x,drive.localization.orientation_y, drive.localization.orientation_z, drive.localization.orientation_w, drive.localization.yaw);
+
+    //check if we have path
+    if (drive.path.position_x.size()==10 and counter >3){
+      ROS_INFO("PID_loc %f", drive.localization.yaw);
+      //drive.pid.error = drive.calc_error(drive.localization.position_x, drive.localization.position_y, drive.path.position_x, drive.path.position_y, drive.localization.yaw);
+      ROS_INFO("PID_Error %f", drive.pid.error);
+      //pid_out = drive.calc_PID(drive.pid.error, drive.pid.e_i, drive.pid.e_prev,drive.pid.kp, drive.pid.ki, drive.pid.kd);
+      ROS_INFO("PID_OUD %f", pid_out);
+    }
 
     //pack data into msg
-    ack_msg.drive.steering_angle = drive.ackermann.steering_angle;
-    ack_msg.drive.steering_angle_velocity = drive.ackermann.steering_angle_velocity;
-    ack_msg.drive.speed = drive.ackermann.speed;
-    ack_msg.drive.acceleration = drive.ackermann.acceleration;
-    ack_msg.drive.jerk = drive.ackermann.jerk;
+    if (pid_out != pid_out){
+      //ROS_INFO("ster: %f", pid_out);
+    ack_msg.drive.steering_angle = 0.1;
+    ack_msg.drive.steering_angle_velocity = 0.1;
+    ack_msg.drive.speed = 0.1;
+    ack_msg.drive.acceleration = 0.01;
+    ack_msg.drive.jerk =0.01;
+    }
 
     //ROS_INFO("%f, %f", drive.path.position_x, drive.path.position_y);
     ackermann_publisher.publish(ack_msg);
     rate.sleep();
+    counter ++;
   }
 }
 
@@ -73,7 +82,7 @@ void pathCallback(const nav_msgs::Path::ConstPtr& msg)
 }
 
 
-float listen_tf(geometry_msgs::TransformStamped transformStamped, float& position_x, float& position_y, float& position_z, float& orientation_x,float& orientation_y,float& orientation_z, float& orientation_w ){
+void listen_tf(geometry_msgs::TransformStamped transformStamped, float& position_x, float& position_y, float& position_z, float& orientation_x,float& orientation_y,float& orientation_z, float& orientation_w, float& yaw){
   position_x = transformStamped.transform.translation.x;
   position_y = transformStamped.transform.translation.y;
   position_z = transformStamped.transform.translation.z;
@@ -81,6 +90,6 @@ float listen_tf(geometry_msgs::TransformStamped transformStamped, float& positio
   orientation_y = transformStamped.transform.rotation.y;
   orientation_z = transformStamped.transform.rotation.z;
   orientation_w = transformStamped.transform.rotation.w;
-  double yaw = drive.convert_quaternion_to_yaw(orientation_x, orientation_y, orientation_z, orientation_w);
-  return float(yaw);
+  yaw = drive.convert_quaternion_to_yaw(orientation_x, orientation_y, orientation_z, orientation_w);
+  
 }
