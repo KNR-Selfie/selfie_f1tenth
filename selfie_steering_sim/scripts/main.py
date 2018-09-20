@@ -135,7 +135,8 @@ if __name__ == '__main__':
         tf_br.sendTransform((state.x, state.y, 0),
                             orientation,
                             current_time,
-                            odom_frame, rear_axis_frame)
+                            rear_axis_frame,
+                            odom_frame)
 
         # Publish to odometry topic
         odom_msg = construct_odom_msg(state, current_time, odom_frame, rear_axis_frame)
