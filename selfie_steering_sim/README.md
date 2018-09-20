@@ -20,7 +20,7 @@ Steering commands to be applied.
 
 ## Parameters
 
-`~wheelbase` (`float`, default: 23.5)
+`~wheelbase` (`float`, default: 235)
 Vehicle wheelbase in millimeters.
 
 `~max_steering_angle` (`float`, default: π/4)
