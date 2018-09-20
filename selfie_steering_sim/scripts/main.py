@@ -108,7 +108,7 @@ if __name__ == '__main__':
     rospy.init_node('selfie_steering_sim')
 
     # Read node parameters
-    wheelbase = rospy.get_param('~wheelbase', 23.5) / 1000
+    wheelbase = rospy.get_param('~wheelbase', 235) / 1000
     max_steering_angle = rospy.get_param('~max_steering_angle', math.pi / 4)
     odom_frame = rospy.get_param('~odom_frame', 'odom')
     rear_axis_frame = rospy.get_param('~rear_axis_frame', 'base_link')
