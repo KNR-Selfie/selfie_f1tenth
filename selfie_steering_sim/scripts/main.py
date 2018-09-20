@@ -58,9 +58,7 @@ def update_state(time):
         v = v0 + a0 * dt + j0 * dt**2/2
 
         delta = steering_command.steering_angle
-        print delta
         delta = max(-max_steering_angle, min(delta, max_steering_angle))
-        print delta
         if isclose(delta, 0.0):
             # Approximate movement as linear motion
             state.x += ds * math.cos(state.th)
@@ -71,7 +69,6 @@ def update_state(time):
 
             # Calculate radius of curvature (positive sign = left turn)
             r = wheelbase / math.tan(delta)
-            print r
 
             # Calculate coordinates of the center of curvature
             cx = state.x - r * math.sin(state.th)
