@@ -58,7 +58,9 @@ def update_state(time):
         v = v0 + a0 * dt + j0 * dt**2/2
 
         delta = steering_command.steering_angle
+        print delta
         delta = max(-max_steering_angle, min(delta, max_steering_angle))
+        print delta
         if isclose(delta, 0.0):
             # Approximate movement as linear motion
             state.x += ds * math.cos(state.th)
@@ -69,6 +71,7 @@ def update_state(time):
 
             # Calculate radius of curvature (positive sign = left turn)
             r = wheelbase / math.tan(delta)
+            print r
 
             # Calculate coordinates of the center of curvature
             cx = state.x - r * math.sin(state.th)
@@ -108,7 +111,7 @@ if __name__ == '__main__':
     rospy.init_node('selfie_steering_sim')
 
     # Read node parameters
-    wheelbase = rospy.get_param('~wheelbase', 235) / 1000
+    wheelbase = rospy.get_param('~wheelbase', 235) / 1000.0
     max_steering_angle = rospy.get_param('~max_steering_angle', math.pi / 4)
     odom_frame = rospy.get_param('~odom_frame', 'odom')
     rear_axis_frame = rospy.get_param('~rear_axis_frame', 'base_link')
