@@ -10,6 +10,9 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <stdbool.h>
+#include <vector>
+
+#define PATH_BUFFER 10
 
 class Ackermann_control
 {
@@ -19,18 +22,23 @@ public:
   float speed;
   float acceleration;
   float jerk;
+  Ackermann_control(){};
 };
 
 class path_control
 {
 public:
-  float position_x;
-  float position_y;
-  float position_z;
-  float orientation_x;
-  float orientation_y;
-  float orientation_z;
-  float orientation_w;
+  std::vector<float> position_x;
+  std::vector<float> position_y;
+  float target_x;
+  float target_y;
+
+  //float position_z[PATH_BUFFER];
+  //float orientation_x[PATH_BUFFER];
+  //float orientation_y[PATH_BUFFER];
+  //float orientation_z[PATH_BUFFER];
+  //float orientation_w[PATH_BUFFER];
+  path_control(){};
 };
 
 class localization_data
@@ -44,6 +52,17 @@ public:
   float orientation_z;
   float orientation_w;
   float yaw;
+  localization_data(){};
+};
+
+class PID
+{
+public:
+  float Kp = 15.f;
+  float Ki = 0.f;
+  float Kd = 0.09;
+  float theta;
+  PID(){};
 };
 
 class drive_control
@@ -58,10 +77,13 @@ public:
   Ackermann_control ackermann;
   path_control path;
   localization_data localization;
+  PID pid;
 
   double convert_quaternion_to_yaw(float orientation_x, float orientation_y, float orientation_z, float orientation_w);
   float get_theta(float position_x, float position_y, float target_x, float target_y, float yaw);
+  void check_target(float position_x, float position_y, std::vector<float> path_position_x, std::vector<float> path_position_y, float& target_x, float& target_y);
 
+  drive_control(){};
 };
 
 
