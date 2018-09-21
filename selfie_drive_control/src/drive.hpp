@@ -61,6 +61,7 @@ public:
   float ki = 0.f;
   float kd = 0.09;
   float theta;
+  float d = 0.1;
   float l = 0.2;
   float error =0;
   float e_i = 0;

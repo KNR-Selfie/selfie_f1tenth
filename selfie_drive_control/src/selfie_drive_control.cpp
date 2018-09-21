@@ -37,30 +37,34 @@ int main(int argc, char** argv)
       ROS_ERROR("%s",ex.what());
       ros::Duration(1.0).sleep();
     }
+    
     //get tf information
+    
     listen_tf(transformStamped,drive.localization.position_x,drive.localization.position_y,drive.localization.position_z,drive.localization.orientation_x,drive.localization.orientation_y, drive.localization.orientation_z, drive.localization.orientation_w, drive.localization.yaw);
-
+    ROS_INFO("Posx %f Posy: %f", drive.localization.position_x, drive.localization.position_y);
     //check if we have path
-    if (drive.path.position_x.size()==10 and counter >3){
-      ROS_INFO("PID_loc %f", drive.localization.yaw);
-      //drive.pid.error = drive.calc_error(drive.localization.position_x, drive.localization.position_y, drive.path.position_x, drive.path.position_y, drive.localization.yaw);
-      ROS_INFO("PID_Error %f", drive.pid.error);
-      //pid_out = drive.calc_PID(drive.pid.error, drive.pid.e_i, drive.pid.e_prev,drive.pid.kp, drive.pid.ki, drive.pid.kd);
-      ROS_INFO("PID_OUD %f", pid_out);
+    if (drive.path.position_x.size()==10 and counter >3){    
+      drive.pid.error = drive.calc_error(drive.localization.position_x, drive.localization.position_y, drive.path.position_x, drive.path.position_y, drive.localization.yaw);
+      //ROS_INFO("PID_Error %f", drive.pid.error);
+      
+      pid_out = drive.calc_PID(drive.pid.error, drive.pid.e_i, drive.pid.e_prev,drive.pid.kp, drive.pid.ki, drive.pid.kd);
+      //ROS_INFO("PID_OUD %f", pid_out);
+      //pack data into msg
+      ROS_INFO("PID error: %f, PID_Out %f Yaw: %f", drive.pid.error, pid_out, drive.localization.yaw);
+      ack_msg.drive.steering_angle = pid_out;
+      ack_msg.drive.steering_angle_velocity = pid_out*0.1;
+      ack_msg.drive.speed = 0.2;
+      ack_msg.drive.acceleration = 0.1;
+      ack_msg.drive.jerk =0.1;
+      ackermann_publisher.publish(ack_msg);
     }
 
-    //pack data into msg
-    if (pid_out != pid_out){
-      //ROS_INFO("ster: %f", pid_out);
-    ack_msg.drive.steering_angle = 0.1;
-    ack_msg.drive.steering_angle_velocity = 0.1;
-    ack_msg.drive.speed = 0.1;
-    ack_msg.drive.acceleration = 0.01;
-    ack_msg.drive.jerk =0.01;
-    }
+    
+    
+    
 
     //ROS_INFO("%f, %f", drive.path.position_x, drive.path.position_y);
-    ackermann_publisher.publish(ack_msg);
+    //ackermann_publisher.publish(ack_msg);
     rate.sleep();
     counter ++;
   }
@@ -83,7 +87,9 @@ void pathCallback(const nav_msgs::Path::ConstPtr& msg)
 
 
 void listen_tf(geometry_msgs::TransformStamped transformStamped, float& position_x, float& position_y, float& position_z, float& orientation_x,float& orientation_y,float& orientation_z, float& orientation_w, float& yaw){
+  //błąd symulatora:
   position_x = transformStamped.transform.translation.x;
+
   position_y = transformStamped.transform.translation.y;
   position_z = transformStamped.transform.translation.z;
   orientation_x = transformStamped.transform.rotation.x;
@@ -91,5 +97,5 @@ void listen_tf(geometry_msgs::TransformStamped transformStamped, float& position
   orientation_z = transformStamped.transform.rotation.z;
   orientation_w = transformStamped.transform.rotation.w;
   yaw = drive.convert_quaternion_to_yaw(orientation_x, orientation_y, orientation_z, orientation_w);
-  
+  //ROS_INFO("%f %f %f %f", orientation_x, orientation_y, orientation_z, orientation_w);
 }

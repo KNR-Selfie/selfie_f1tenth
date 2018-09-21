@@ -62,16 +62,20 @@ float drive_control::check_target(float position_x, float position_y, std::vecto
   else{
     ROS_INFO("ERROR: Too late path");
   }
-
+  ROS_INFO("Target %f %f",pos_end_x, pos_end_y);
+  //ROS_INFO("%f %f %f %f %f %f %f", pos_start_x, pos_start_x, pos_end_x, pos_end_y, position_x, position_y, yaw);
   return calc_path_line(pos_start_x, pos_start_y,pos_end_x, pos_end_y,position_x, position_y, yaw );
 }
 
 float drive_control::calc_path_line(float pos_start_x, float pos_start_y, float pos_end_x, float pos_end_y, float pos_now_x, float pos_now_y, float yaw){
-  float theta_path = get_theta(pos_start_x, pos_start_y, pos_end_x, pos_end_y);
-  float theta_now = get_theta(pos_start_x, pos_start_y, pos_now_x, pos_now_y);
-  float delta_theta = theta_path-theta_now;
-  float dist_start_now = get_distance(pos_start_x, pos_start_y, pos_now_x, pos_now_y);
-  float y = sin(delta_theta)*dist_start_now;
+  float A = (pos_end_x-pos_start_x);
+  float B = (pos_start_y - pos_end_y);
+  float C = (pos_start_x*pos_end_y - pos_start_y*pos_end_x);
+  float y = -(A*pos_now_x+B*pos_now_y+C)/(sqrt(A*A+B*B));
+  
+  float theta_path = get_theta(pos_now_x, pos_now_y, pos_end_x, pos_end_y);
+  float delta_theta = theta_path - (yaw);
+  //ROS_INFO("SIn %f %f %f",y, theta_path, delta_theta);
   y = y + pid.l*sin(delta_theta);
   return y;
 }
@@ -84,9 +88,11 @@ float drive_control::calc_error(float localization_position_x, float localizatio
 }
 
 float drive_control::calc_PID(float& error, float& e_cum, float& e_prev, float kp, float ki, float kd){
+  error = pid.d*error;
   e_cum = e_cum+error;
-  float out_pid = kp*(-error)+ki*(e_cum)+kd*(error-e_prev);
+  float out_pid = -( kp*(error)+ki*(e_cum)+kd*(error-e_prev));
   e_prev = error;
+  ROS_INFO("OUT_PID: %f",out_pid);
   if (out_pid>ack_limit.alfa_max){
     out_pid = ack_limit.alfa_max;
   }
