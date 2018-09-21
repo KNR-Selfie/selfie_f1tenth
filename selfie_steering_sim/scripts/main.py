@@ -11,16 +11,22 @@ from nav_msgs.msg import Odometry
 UPDATE_RATE = 50
 
 class VehicleState:
+    # Steering angle
+    delta = 0.0
+
+    # Position & orientation
     x = 0.0
     y = 0.0
     th = 0.0
 
+    # Velocity
     vx = 0.0
     vy = 0.0
     vth = 0.0
 
 wheelbase = None
 max_steering_angle = None
+max_steering_angle_velocity = None
 
 steering_command = None
 
@@ -58,7 +64,16 @@ def update_state(time):
         v = v0 + a0 * dt + j0 * dt**2/2
 
         delta = steering_command.steering_angle
-        delta = max(-max_steering_angle, min(delta, max_steering_angle))
+
+        if max_steering_angle > 0:
+            delta = max(-max_steering_angle, min(delta, max_steering_angle))
+
+        if max_steering_angle_velocity > 0:
+            delta = math.max(state.delta - max_steering_angle_velocity * dt,
+                             min(delta,
+                             state.delta + max_steering_angle_velocity * dt))
+
+        state.delta = delta
         if isclose(delta, 0.0):
             # Approximate movement as linear motion
             state.x += ds * math.cos(state.th)
@@ -82,9 +97,9 @@ def update_state(time):
             state.x = cx + r * math.sin(state.th)
             state.y = cy - r * math.cos(state.th)
 
-            # Calculate instantaneous velocity
-            state.vx = v * math.cos(state.th)
-            state.vy = v * math.sin(state.th)
+        # Calculate instantaneous velocity
+        state.vx = v * math.cos(state.th)
+        state.vy = v * math.sin(state.th)
 
     last_update = time
     return state
@@ -108,8 +123,9 @@ if __name__ == '__main__':
     rospy.init_node('selfie_steering_sim')
 
     # Read node parameters
-    wheelbase = rospy.get_param('~wheelbase', 235) / 1000
+    wheelbase = rospy.get_param('~wheelbase', 235) / 1000.0
     max_steering_angle = rospy.get_param('~max_steering_angle', math.pi / 4)
+    max_steering_angle = rospy.get_param('~max_steering_angle_velocity', math.pi)
     odom_frame = rospy.get_param('~odom_frame', 'odom')
     rear_axis_frame = rospy.get_param('~rear_axis_frame', 'base_link')
 
@@ -135,7 +151,8 @@ if __name__ == '__main__':
         tf_br.sendTransform((state.x, state.y, 0),
                             orientation,
                             current_time,
-                            odom_frame, rear_axis_frame)
+                            rear_axis_frame,
+                            odom_frame)
 
         # Publish to odometry topic
         odom_msg = construct_odom_msg(state, current_time, odom_frame, rear_axis_frame)

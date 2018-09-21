@@ -20,11 +20,14 @@ Steering commands to be applied.
 
 ## Parameters
 
-`~wheelbase` (`float`, default: 23.5)
+`~wheelbase` (`float`, default: 235)
 Vehicle wheelbase in millimeters.
 
 `~max_steering_angle` (`float`, default: π/4)
-Maximum absolute value of the steering angle. If there is a larger value present in an incoming command, it will be clamped.
+Maximum absolute value of the steering angle, in radians. If there is a larger value present in an incoming command, it will be clamped. Set to zero to omit this constraint.
+
+`~max_steering_angle_velocity` (`float`, default: π)
+Maximum absolute value of the steering angle, in radians per second. If there is a larger value present in an incoming command, it will be clamped. Set to zero to omit this constraint.
 
 `~odom_frame` (`string`, default: odom)
 The name of the odometry frame.
