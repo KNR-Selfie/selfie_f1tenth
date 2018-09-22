@@ -41,7 +41,7 @@ void distanceCallback(const std_msgs::Float32 &msg)
 {
 
   current_time = ros::Time::now();
-  currentDistance = msg.data / 1000;
+  currentDistance = msg.data;
 
   if (distance_initialized)
   {
