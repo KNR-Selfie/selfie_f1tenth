@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
 void ackermanCallback(const ackermann_msgs::AckermannDriveStamped::ConstPtr& msg)
 {
-  Usb.control.steering_angle = msg->drive.steering_angle;
+  Usb.control.steering_angle = -msg->drive.steering_angle;
   Usb.control.steering_angle_velocity = msg->drive.steering_angle_velocity;
   Usb.control.speed = msg->drive.speed;
   Usb.control.acceleration = msg->drive.acceleration;
