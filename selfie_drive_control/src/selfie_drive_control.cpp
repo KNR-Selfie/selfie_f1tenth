@@ -18,8 +18,8 @@ int main(int argc, char** argv)
   tf2_ros::TransformListener tfListener(tfBuffer);
 
   ros::Rate rate(10.0);
-  drive.ackermann.steering_angle = 0;//10*3.14/180;
-  drive.ackermann.steering_angle_velocity = 0;// 4*3.14/180;
+  drive.ackermann.steering_angle = 0;
+  drive.ackermann.steering_angle_velocity = 0;
   drive.ackermann.speed = 0;
   drive.ackermann.acceleration = 0;
   drive.ackermann.jerk = 0;
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     //get tf information
     
     listen_tf(transformStamped,drive.localization.position_x,drive.localization.position_y,drive.localization.position_z,drive.localization.orientation_x,drive.localization.orientation_y, drive.localization.orientation_z, drive.localization.orientation_w, drive.localization.yaw);
-    ROS_INFO("Posx %f Posy: %f", drive.localization.position_x, drive.localization.position_y);
+    ROS_INFO("Posx %f Posy: %f Yaw: %f", drive.localization.position_x, drive.localization.position_y, drive.localization.yaw);
     //check if we have path
     if (drive.path.position_x.size()==10 and counter >3){    
       drive.pid.error = drive.calc_error(drive.localization.position_x, drive.localization.position_y, drive.path.position_x, drive.path.position_y, drive.localization.yaw);
@@ -50,13 +50,13 @@ int main(int argc, char** argv)
       pid_out = drive.calc_PID(drive.pid.error, drive.pid.e_i, drive.pid.e_prev,drive.pid.kp, drive.pid.ki, drive.pid.kd);
       //ROS_INFO("PID_OUD %f", pid_out);
       //pack data into msg
-      ROS_INFO("PID error: %f, PID_Out %f Yaw: %f", drive.pid.error, pid_out, drive.localization.yaw);
-      ack_msg.drive.steering_angle = pid_out;
-      ack_msg.drive.steering_angle_velocity = pid_out*0.1;
-      ack_msg.drive.speed = 0.2;
-      ack_msg.drive.acceleration = 0.1;
-      ack_msg.drive.jerk =0.1;
-      ackermann_publisher.publish(ack_msg);
+      ROS_INFO("PID error: %f, PID_Out %f", drive.pid.error, pid_out);
+      //ack_msg.drive.steering_angle = pid_out;
+      //ack_msg.drive.steering_angle_velocity = pid_out*0.1;
+      //ack_msg.drive.speed = 0.2;
+      //ack_msg.drive.acceleration = 0.1;
+      //ack_msg.drive.jerk =0.1;
+      //ackermann_publisher.publish(ack_msg);
     }
 
     
