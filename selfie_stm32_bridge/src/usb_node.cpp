@@ -70,11 +70,11 @@ int main(int argc, char **argv)
 
     //send velocity to msg
     std_msgs::Float32 velo_msg;
-    velo_msg.data = (float)(velocity / 1000);
+    velo_msg.data = (float)velocity / 1000;
 
     //send distance to msg
     std_msgs::Float32 dis_msg;
-    dis_msg.data = (float)(distance / 1000);
+    dis_msg.data = (float)distance / 1000;
 
     //publishing msg
     imu_publisher.publish(imu_msg);
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
 void ackermanCallback(const ackermann_msgs::AckermannDriveStamped::ConstPtr& msg)
 {
-  Usb.control.steering_angle = msg->drive.steering_angle;
+  Usb.control.steering_angle = -msg->drive.steering_angle;
   Usb.control.steering_angle_velocity = msg->drive.steering_angle_velocity;
   Usb.control.speed = msg->drive.speed;
   Usb.control.acceleration = msg->drive.acceleration;
