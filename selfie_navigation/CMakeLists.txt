@@ -9,6 +9,9 @@ project(selfie_navigation)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   move_base
+  move_base_msgs
+  actionlib
+  tf2_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -195,3 +198,7 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(goals_control src/goals_control.cpp)
+target_link_libraries(goals_control ${catkin_LIBRARIES})
+add_dependencies(goals_control goals_control_generate_messages_cpp)
