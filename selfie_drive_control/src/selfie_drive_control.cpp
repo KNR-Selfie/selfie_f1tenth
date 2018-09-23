@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     //listen localization data 
     geometry_msgs::TransformStamped transformStamped;
     try{
-      transformStamped = tfBuffer.lookupTransform("base_link","map",ros::Time(0));
+      transformStamped = tfBuffer.lookupTransform("map","base_link",ros::Time(0));
     }
     catch (tf2::TransformException ex){
       ROS_ERROR("%s",ex.what());
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     //get tf information
     
     listen_tf(transformStamped,drive.localization.position_x,drive.localization.position_y,drive.localization.position_z,drive.localization.orientation_x,drive.localization.orientation_y, drive.localization.orientation_z, drive.localization.orientation_w, drive.localization.yaw);
-    ROS_INFO("Posx %f Posy: %f Yaw: %f", drive.localization.position_x, drive.localization.position_y, drive.localization.yaw);
+    //ROS_INFO("Posx %f Posy: %f Yaw: %f", drive.localization.position_x, drive.localization.position_y, drive.localization.yaw);
     //check if we have path
     if (drive.path.position_x.size()==10 and counter >3){    
       drive.pid.error = drive.calc_error(drive.localization.position_x, drive.localization.position_y, drive.path.position_x, drive.path.position_y, drive.localization.yaw);
@@ -51,14 +51,13 @@ int main(int argc, char** argv)
       //ROS_INFO("PID_OUD %f", pid_out);
       //pack data into msg
       ROS_INFO("PID error: %f, PID_Out %f", drive.pid.error, pid_out);
-      //ack_msg.drive.steering_angle = pid_out;
-      //ack_msg.drive.steering_angle_velocity = pid_out*0.1;
-      //ack_msg.drive.speed = 0.2;
-      //ack_msg.drive.acceleration = 0.1;
-      //ack_msg.drive.jerk =0.1;
-      //ackermann_publisher.publish(ack_msg);
+      ack_msg.drive.steering_angle = pid_out;
+      ack_msg.drive.steering_angle_velocity = pid_out*0.1;
+      ack_msg.drive.speed = 0.1;
+      ack_msg.drive.acceleration = 0.1;
+      ack_msg.drive.jerk =0.1;
+      ackermann_publisher.publish(ack_msg);
     }
-
     
     
     
@@ -87,15 +86,17 @@ void pathCallback(const nav_msgs::Path::ConstPtr& msg)
 
 
 void listen_tf(geometry_msgs::TransformStamped transformStamped, float& position_x, float& position_y, float& position_z, float& orientation_x,float& orientation_y,float& orientation_z, float& orientation_w, float& yaw){
-  //błąd symulatora:
-  position_x = transformStamped.transform.translation.x;
 
+  position_x = transformStamped.transform.translation.x;
   position_y = transformStamped.transform.translation.y;
+  ROS_INFO("Posx %f Posy: %f",position_x, position_y);
+   
   position_z = transformStamped.transform.translation.z;
   orientation_x = transformStamped.transform.rotation.x;
   orientation_y = transformStamped.transform.rotation.y;
   orientation_z = transformStamped.transform.rotation.z;
   orientation_w = transformStamped.transform.rotation.w;
   yaw = drive.convert_quaternion_to_yaw(orientation_x, orientation_y, orientation_z, orientation_w);
+  //yaw = -90*3.14/180;
   //ROS_INFO("%f %f %f %f", orientation_x, orientation_y, orientation_z, orientation_w);
 }

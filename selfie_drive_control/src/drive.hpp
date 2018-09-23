@@ -58,11 +58,11 @@ class PID
 {
 public:
   float kp = 15.f;
-  float ki = 0.f;
-  float kd = 0.09;
+  float ki = 0.05f;
+  float kd = 0.1;
   float theta;
   float d = 0.1;
-  float l = 0.2;
+  float l = 0.5;
   float error =0;
   float e_i = 0;
   float e_prev = 0;

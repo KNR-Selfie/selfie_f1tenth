@@ -14,53 +14,67 @@ int main(int argc, char** argv)
   //path_msg.header.stamp = plan[0].header.stamp;
   pose.pose.position.x = 0;
   pose.pose.position.y = 0;
-  float fi = 0;
-  float add_x = 2.5;
-  float add_y = 2.7;
+  //float fi = 0;
+  //float add_x = 2.5;
+  //float add_y = 2.7;
   float add_c_x = 0.1;
   float add_c_y = 0.2;
 
+    float fi = 0;
+    float add_x = -0;
+    float add_y = 0.001;
+    float a = 1;
+    float b = 0;
+    float dir = 1;
+    float c = 2;
+    float d = 2;
   while (ros::ok())
   {
     ros::spinOnce();
     ros::Time now = ros::Time::now();
     path_msg.poses.clear();
-    pose.pose.position.x = 0.1;
-    pose.pose.position.y = 0.1;
-    float fi = 0;
-    float add_x = 2.5;
-    float add_y = 2.7;
-    float add_c_x = 0.1;
-    float add_c_y = 0.2;
-    pose.pose.position.x = 1;
-    pose.pose.position.y = 1;
+
+    //float add_c_x = 0.1;
+    //float add_c_y = 0.2;
+    //1
+    pose.pose.position.x = 0;
+    pose.pose.position.y = -0.2;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 2;
-    pose.pose.position.y = 2;
+    //2
+    pose.pose.position.x = 0;
+    pose.pose.position.y = -2;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 3;
-    pose.pose.position.y = 3;
+    //3
+    pose.pose.position.x = -2;
+    pose.pose.position.y = -4;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 4;
-    pose.pose.position.y = 4;
+    //4
+    pose.pose.position.x = -4;
+    pose.pose.position.y = -5;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 5;
-    pose.pose.position.y = 5;
+    //5
+    pose.pose.position.x = -5;
+    pose.pose.position.y = -6;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 6;
-    pose.pose.position.y = 6;
+    //6
+    pose.pose.position.x = 0;
+    pose.pose.position.y = 0;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 7;
-    pose.pose.position.y = 7;
+    //7
+    pose.pose.position.x = 332.8;
+    pose.pose.position.y = 336.5;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 8;
-    pose.pose.position.y = 8;
+    //8
+    pose.pose.position.x = 332.5;
+    pose.pose.position.y = 336;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 9;
-    pose.pose.position.y = 9;
+    //9
+    pose.pose.position.x = 332;
+    pose.pose.position.y = 335.5;
     path_msg.poses.push_back(pose);
-    pose.pose.position.x = 10;
-    pose.pose.position.y = 10;
+    //10
+    pose.pose.position.x = 332;
+    pose.pose.position.y = 337;
     path_msg.poses.push_back(pose);
     /*for(int i = 0; i<8;i++){
       pose.pose.position.x += add_x*add_c_x;
@@ -91,6 +105,19 @@ int main(int argc, char** argv)
       //publishing msg
       //path_publisher.publish(path_msg);
     }*/
+    if (b<5 and b>-5){
+      b +=dir * add_y;
+
+    }
+    if (b>=5){
+      dir = -1;
+      b = 4.9;
+    }
+    else if (b<=-5){
+      dir = 1;
+      b = -4.9;
+    }
+    
     path_publisher.publish(path_msg);
     loop_rate.sleep();
   }
