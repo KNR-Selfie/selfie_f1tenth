@@ -4,14 +4,18 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <tf2_ros/transform_listener.h>
 #include <move_base_msgs/MoveBaseActionFeedback.h>
+#include <vector>
+
+#include <fstream>
+#include <iostream>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-const int goals_amount = 7;
-geometry_msgs::Pose goals_tab[goals_amount];
+int goals_amount = 5;
+std::vector < geometry_msgs::Pose > goals_vector;
 int goals_received = 0;
 geometry_msgs::Pose act_pose;
-float distanceToSendNewGoal = 2; //m
+float distanceToSendNewGoal = 0.5; //m
 
 void feedbackCallback(const move_base_msgs::MoveBaseActionFeedback &msg){
   act_pose.position.x = msg.feedback.base_position.pose.position.x;
@@ -20,14 +24,14 @@ void feedbackCallback(const move_base_msgs::MoveBaseActionFeedback &msg){
 
 void goalReceiverCallback(const geometry_msgs::PoseStamped &msg)
 {
-  goals_tab[goals_received]=msg.pose;
+  goals_vector.push_back(msg.pose);
   goals_received++;
   ROS_INFO("I've already saved %i goals", goals_received);
 }
 
 float getDistance(int goalID){
-  return sqrt(pow((goals_tab[goalID].position.x - act_pose.position.x),2)
-     + pow((goals_tab[goalID].position.y - act_pose.position.y),2));
+  return sqrt(pow((goals_vector[goalID].position.x - act_pose.position.x),2)
+     + pow((goals_vector[goalID].position.y - act_pose.position.y),2));
 }
 
 int findNearestGoal(){
@@ -49,14 +53,40 @@ int main(int argc, char** argv){
 
   ros::NodeHandle n("~");
 
-  ros::Subscriber sub_goal = n.subscribe("/move_base_simple/goal", 50, goalReceiverCallback);
+  //ros::Subscriber sub_goal = n.subscribe("/move_base_simple/goal", 50, goalReceiverCallback);
   ros::Subscriber feedback_goal = n.subscribe("/move_base/feedback", 50, feedbackCallback);
 
   //save goals
+  /*
   ROS_INFO("Waiting for %d goals",goals_amount);
   while(goals_amount > goals_received && n.ok()){
     ros::spinOnce();
+  }*/
+
+  //save goals from file
+  
+  std::fstream file;
+  file.open("src/selfie_f1tenth/selfie_navigation/goals/goals.txt", std::ios::in);
+  if(file.good() == true){
+      file >> goals_amount;
+      for(int i = 0; i< goals_amount; i++)
+      {
+          geometry_msgs::Pose temp;
+          file >> temp.position.x;
+          file >> temp.position.y;
+          file >> temp.position.z;
+          file >> temp.orientation.x;
+          file >> temp.orientation.y;
+          file >> temp.orientation.z;
+          file >> temp.orientation.w;
+          goals_vector.push_back(temp);
+      }
+      ROS_INFO("Goals sent");
   }
+  else{
+      ROS_INFO("Couldn't load file");
+  }
+  file.close();
 
   //get actual pose
   tf2_ros::Buffer tfBuffer;
@@ -89,7 +119,7 @@ int main(int argc, char** argv){
 
   //info printing
   ROS_INFO("actPOSE IS\n X: %.2f \n Y: %.2f", act_pose.position.x, act_pose.position.y);
-  ROS_INFO("nearestGOAL IS\n id: %d\nX: %.2f \n Y: %.2f",act_goal, goals_tab[act_goal].position.x, goals_tab[act_goal].position.y);
+  ROS_INFO("nearestGOAL IS\n id: %d\nX: %.2f \n Y: %.2f",act_goal, goals_vector[act_goal].position.x, goals_vector[act_goal].position.y);
 
   MoveBaseClient ac("move_base", true);
 
@@ -106,7 +136,7 @@ int main(int argc, char** argv){
     act_goal = act_goal % goals_amount;
     act_goalToCheckDistance = (act_goal + goals_amount - 1) % goals_amount;
     goal.target_pose.header.stamp = ros::Time::now();
-    goal.target_pose.pose = goals_tab[act_goal];
+    goal.target_pose.pose = goals_vector[act_goal];
     ROS_INFO("Sending goal %d",act_goal);
     ac.sendGoal(goal);
     ros::Rate loop_rate(1);
