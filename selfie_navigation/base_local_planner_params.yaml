@@ -9,12 +9,14 @@ TebLocalPlannerROS:
  dt_ref: 0.3
  dt_hysteresis: 0.1
  global_plan_overwrite_orientation: True
- max_global_plan_lookahead_dist: 3.0
- feasibility_check_no_poses: 5
+ max_global_plan_lookahead_dist: 2.0
+ feasibility_check_no_poses: 4
+ force_reinit_new_goal_dist: 2
+ exact_arc_length: False
 
  # Robot
 
- max_vel_x: 0.4
+ max_vel_x: 0.5
  max_vel_x_backwards: 0.2
  max_vel_theta: 0.3
  acc_lim_x: 0.5
@@ -34,8 +36,8 @@ TebLocalPlannerROS:
  # Obstacles
 
  min_obstacle_dist: 0.1
- include_costmap_obstacles: True
- costmap_obstacles_behind_robot_dist: 1.0
+ include_costmap_obstacles: False
+ costmap_obstacles_behind_robot_dist: 0.5
  obstacle_poses_affected: 20
  costmap_converter_plugin: ""
  costmap_converter_spin_thread: True
