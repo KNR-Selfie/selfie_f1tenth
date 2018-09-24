@@ -202,3 +202,7 @@ include_directories(
 add_executable(goals_control src/goals_control.cpp)
 target_link_libraries(goals_control ${catkin_LIBRARIES})
 add_dependencies(goals_control goals_control_generate_messages_cpp)
+
+add_executable(speed_control src/speed_control.cpp)
+target_link_libraries(speed_control ${catkin_LIBRARIES})
+add_dependencies(speed_control speed_control_generate_messages_cpp)
