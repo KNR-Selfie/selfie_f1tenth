@@ -3,14 +3,20 @@
 #include <actionlib/client/simple_action_client.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf2_ros/transform_listener.h>
-
+#include <move_base_msgs/MoveBaseActionFeedback.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-const int goals_amount = 4;
+const int goals_amount = 7;
 geometry_msgs::Pose goals_tab[goals_amount];
 int goals_received = 0;
-int actual_goal_number = 0;
+geometry_msgs::Pose act_pose;
+float distanceToSendNewGoal = 2; //m
+
+void feedbackCallback(const move_base_msgs::MoveBaseActionFeedback &msg){
+  act_pose.position.x = msg.feedback.base_position.pose.position.x;
+  act_pose.position.y = msg.feedback.base_position.pose.position.y;
+}
 
 void goalReceiverCallback(const geometry_msgs::PoseStamped &msg)
 {
@@ -19,13 +25,17 @@ void goalReceiverCallback(const geometry_msgs::PoseStamped &msg)
   ROS_INFO("I've already saved %i goals", goals_received);
 }
 
-int findNearestGoal(geometry_msgs::Pose act_pose){
+float getDistance(int goalID){
+  return sqrt(pow((goals_tab[goalID].position.x - act_pose.position.x),2)
+     + pow((goals_tab[goalID].position.y - act_pose.position.y),2));
+}
+
+int findNearestGoal(){
   float min = 99999999;
   int index=0;
 
   for(int  i = 0; i < goals_amount; i++){
-     float distance = sqrt(pow((goals_tab[i].position.x - act_pose.position.x),2)
-     + pow((goals_tab[i].position.y - act_pose.position.y),2));
+     float distance = getDistance(i);
      if(distance<min){
        min=distance;
        index=i;
@@ -40,8 +50,10 @@ int main(int argc, char** argv){
   ros::NodeHandle n("~");
 
   ros::Subscriber sub_goal = n.subscribe("/move_base_simple/goal", 50, goalReceiverCallback);
+  ros::Subscriber feedback_goal = n.subscribe("/move_base/feedback", 50, feedbackCallback);
 
   //save goals
+  ROS_INFO("Waiting for %d goals",goals_amount);
   while(goals_amount > goals_received && n.ok()){
     ros::spinOnce();
   }
@@ -50,7 +62,7 @@ int main(int argc, char** argv){
   tf2_ros::Buffer tfBuffer;
   tf2_ros::TransformListener tfListener(tfBuffer);
   geometry_msgs::TransformStamped transformStamped;
-  geometry_msgs::Pose act_pose;
+
 
   while(ros::ok()){
     try{
@@ -71,8 +83,9 @@ int main(int argc, char** argv){
   act_pose.orientation.y = transformStamped.transform.rotation.y;
   act_pose.orientation.z = transformStamped.transform.rotation.z;
   act_pose.orientation.w = transformStamped.transform.rotation.w;
-
-  int act_goal = findNearestGoal(act_pose);
+  
+  int act_goalToCheckDistance;
+  int act_goal = (findNearestGoal() + 2) % goals_amount;
 
   //info printing
   ROS_INFO("actPOSE IS\n X: %.2f \n Y: %.2f", act_pose.position.x, act_pose.position.y);
@@ -86,17 +99,27 @@ int main(int argc, char** argv){
    }
 
   //send goals
+  float distanceToGoal=0;
   move_base_msgs::MoveBaseGoal goal;
   goal.target_pose.header.frame_id = "map";
   while(ros::ok()){
-    act_goal = act_goal%goals_amount;
+    act_goal = act_goal % goals_amount;
+    act_goalToCheckDistance = (act_goal + goals_amount - 1) % goals_amount;
     goal.target_pose.header.stamp = ros::Time::now();
     goal.target_pose.pose = goals_tab[act_goal];
     ROS_INFO("Sending goal %d",act_goal);
     ac.sendGoal(goal);
-    ac.waitForResult();
+    ros::Rate loop_rate(1);
+    while(n.ok())
+    {
+      ros::spinOnce();
+      distanceToGoal=getDistance(act_goalToCheckDistance);
+      if(distanceToGoal < distanceToSendNewGoal)
+        break;
+      loop_rate.sleep();
+    }
     act_goal++;
   }
-  
+
   return 0;
 }
