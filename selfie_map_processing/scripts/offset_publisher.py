@@ -24,7 +24,7 @@ def generate_interpolation(offsets, resolution, origin):
     return interpolate.interp2d(x, y, z)
 
 if __name__ == '__main__':
-    rospy.init_node('selfie_controller')
+    rospy.init_node('selfie_offset_publisher')
 
     # Read output of map preprocessing
     filename = sys.argv[1]
