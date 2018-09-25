@@ -34,7 +34,7 @@ state = None
 last_update = None
 
 # Source: https://www.python.org/dev/peps/pep-0485/#proposed-implementation
-def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+def isclose(a, b, rel_tol=1e-09, abs_tol=1e-15):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 def handle_command(cmd):
