@@ -15,7 +15,7 @@ int goals_amount = 5;
 std::vector < geometry_msgs::Pose > goals_vector;
 int goals_received = 0;
 geometry_msgs::Pose act_pose;
-float distanceToSendNewGoal = 0.5; //m
+float distanceToSendNewGoal = 0.8; //m
 
 void feedbackCallback(const move_base_msgs::MoveBaseActionFeedback &msg){
   act_pose.position.x = msg.feedback.base_position.pose.position.x;
