@@ -106,6 +106,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
+   CATKIN_DEPENDS message_runtime
 #  INCLUDE_DIRS include
 #  LIBRARIES obstacles_selfie
 #  CATKIN_DEPENDS other_catkin_pkg
@@ -120,7 +121,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
-# ${catkin_INCLUDE_DIRS}
+ ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -200,7 +201,8 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(selfie_obstacles src/selfie_obstacles.cpp)
+add_executable(selfie_obstacles src/selfie_obstacles.cpp src/obstacles.cpp)
 target_link_libraries(selfie_obstacles ${catkin_LIBRARIES})
 add_dependencies(selfie_obstacles selfie_obstacles_generate_messages_cpp)
