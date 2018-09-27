@@ -139,7 +139,7 @@ int main(int argc, char** argv){
     goal.target_pose.pose = goals_vector[act_goal];
     ROS_INFO("Sending goal %d",act_goal);
     ac.sendGoal(goal);
-    ros::Rate loop_rate(1);
+    ros::Rate loop_rate(5);
     while(n.ok())
     {
       ros::spinOnce();
