@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     imu_msg.angular_velocity.y = (float)(ang_vel_y / 65.535f);
     imu_msg.angular_velocity.z = (float)(ang_vel_z / 65.535f);
 
-    //send velocity to msg
+    //send velocity to msg20
     std_msgs::Float32 velo_msg;
     velo_msg.data = (float)(velocity / 1000);
 

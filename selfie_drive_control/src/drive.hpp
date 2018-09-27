@@ -83,7 +83,7 @@ private:
 public:
   double base_yaw = 0.0;
   uint8_t yaw_initialized = false;
-  
+  bool avoid_set = false;
 
   Ackermann_control ackermann;
   ackermann_limits ack_limit;
@@ -98,7 +98,7 @@ float check_target(float position_x, float position_y, std::vector<float> path_p
 float calc_path_line(float pos_start_x, float pos_start_y, float pos_end_x, float pos_end_y, float pos_now_x, float pos_now_y, float yaw);
 float calc_error(float localization_position_x, float localization_position_y, std::vector<float> path_position_x, std::vector<float> path_position_y, float yaw);
 float calc_PID(float& error, float& e_cum, float& e_prev,float kp, float ki, float kd);
-
+void avoid_obstacle(float width, float height, float pos_x, float pos_y, float yaw);
    
   drive_control(){};
 };

@@ -38,42 +38,42 @@ int main(int argc, char** argv)
     //float add_c_y = 0.2;
     //1
     pose.pose.position.x = 0;
-    pose.pose.position.y = -0.2;
-    path_msg.poses.push_back(pose);
-    //2
-    pose.pose.position.x = 0;
-    pose.pose.position.y = -2;
-    path_msg.poses.push_back(pose);
-    //3
-    pose.pose.position.x = -2;
-    pose.pose.position.y = -4;
-    path_msg.poses.push_back(pose);
-    //4
-    pose.pose.position.x = -4;
-    pose.pose.position.y = -5;
-    path_msg.poses.push_back(pose);
-    //5
-    pose.pose.position.x = -5;
-    pose.pose.position.y = -6;
-    path_msg.poses.push_back(pose);
-    //6
-    pose.pose.position.x = 0;
     pose.pose.position.y = 0;
     path_msg.poses.push_back(pose);
+    //2
+    pose.pose.position.x = 1;
+    pose.pose.position.y = 1;
+    path_msg.poses.push_back(pose);
+    //3
+    pose.pose.position.x = 2;
+    pose.pose.position.y = -1;
+    path_msg.poses.push_back(pose);
+    //4
+    pose.pose.position.x = 3;
+    pose.pose.position.y = -4.1;
+    path_msg.poses.push_back(pose);
+    //5
+    pose.pose.position.x = 4;
+    pose.pose.position.y = -4.2;
+    path_msg.poses.push_back(pose);
+    //6
+    pose.pose.position.x = 5;
+    pose.pose.position.y = -5;
+    path_msg.poses.push_back(pose);
     //7
-    pose.pose.position.x = 332.8;
+    pose.pose.position.x = 6;
     pose.pose.position.y = 336.5;
     path_msg.poses.push_back(pose);
     //8
-    pose.pose.position.x = 332.5;
+    pose.pose.position.x = 7;
     pose.pose.position.y = 336;
     path_msg.poses.push_back(pose);
     //9
-    pose.pose.position.x = 332;
+    pose.pose.position.x = 8;
     pose.pose.position.y = 335.5;
     path_msg.poses.push_back(pose);
     //10
-    pose.pose.position.x = 332;
+    pose.pose.position.x = 9;
     pose.pose.position.y = 337;
     path_msg.poses.push_back(pose);
     /*for(int i = 0; i<8;i++){

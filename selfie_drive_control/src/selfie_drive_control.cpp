@@ -25,6 +25,8 @@ int main(int argc, char** argv)
   drive.ackermann.jerk = 0;
   float pid_out;
   uint32_t counter= 0;
+  
+
   while (ros::ok()){
     ros::spinOnce();
 
@@ -41,9 +43,11 @@ int main(int argc, char** argv)
     //get tf information
     
     listen_tf(transformStamped,drive.localization.position_x,drive.localization.position_y,drive.localization.position_z,drive.localization.orientation_x,drive.localization.orientation_y, drive.localization.orientation_z, drive.localization.orientation_w, drive.localization.yaw);
+    if (drive.avoid_set ==false)
+      drive.avoid_obstacle(2, 3, drive.localization.position_x, drive.localization.position_y, drive.localization.yaw);
     //ROS_INFO("Posx %f Posy: %f Yaw: %f", drive.localization.position_x, drive.localization.position_y, drive.localization.yaw);
     //check if we have path
-    if (drive.path.position_x.size()==10 and counter >3){    
+    if (drive.avoid_set == true and counter >3){    
       drive.pid.error = drive.calc_error(drive.localization.position_x, drive.localization.position_y, drive.path.position_x, drive.path.position_y, drive.localization.yaw);
       //ROS_INFO("PID_Error %f", drive.pid.error);
       
