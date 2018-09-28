@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <math.h>
-
-#include <include/def.hpp>
+#include <stdint.h>
+#include "def.hpp"
 
 class Process
 {
@@ -32,6 +32,7 @@ public:
     float slope[DET_NUM-1];
 
 public:
+    
     Process();
     void polar_to_cartesian();
     void simplify_data();

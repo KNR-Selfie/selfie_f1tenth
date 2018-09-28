@@ -1,4 +1,5 @@
 #pragma once
+
 #include <vector>
 
 #define DET_NUM 3
