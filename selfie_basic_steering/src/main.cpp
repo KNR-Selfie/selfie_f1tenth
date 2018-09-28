@@ -1,7 +1,9 @@
 #include "ros/ros.h"
-#include "sensor_msgs/LaserScan.h"
-#include "include/process.hpp"
 #include "std_msgs/Float64.h"
+#include "sensor_msgs/LaserScan.h"
+
+#include "include/process.hpp"
+
 Process process;
 SteerData data_to_send;
 
@@ -13,7 +15,6 @@ int main(int argc, char **argv)
   ros::NodeHandle node;
   ros::Publisher steering_publisher = node.advertise<std_msgs::Float64>("steering_state", 100);
   ros::Subscriber lidar_subscriber = node.subscribe("scan", 1, lidarCallback);
-  //msg sent to PID:
   std_msgs::Float64 state_msg;
   
   while (ros::ok())
@@ -29,10 +30,7 @@ int main(int argc, char **argv)
     
     // Publish data
     process.pack_data(data_to_send);
-    //TODO: here add the variable that you want to give to PID:
-    //need to be Float type, one value, now doesnt work
-    //steering_publisher.publish(data_to_send);
-    state_msg.data = 10.f;
+    state_msg.data = data_to_send.offset[1]*0.8 + data_to_send.offset[0]*0.2;
     steering_publisher.publish(state_msg);
 
      // Next step

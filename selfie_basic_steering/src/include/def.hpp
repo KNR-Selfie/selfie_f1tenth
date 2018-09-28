@@ -23,6 +23,6 @@ struct LidarReading
 
 struct SteerData
 {
-    float offset[DET_NUM];
+    double offset[DET_NUM];
     float slope[DET_NUM-1];
 };

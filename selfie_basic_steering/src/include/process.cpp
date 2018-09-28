@@ -11,7 +11,7 @@ void Process::polar_to_cartesian()
     all_points.pos.clear();
     all_points.angle.clear();
 
-    for(uint32_t i = raw_data.size()-1; i >= 0 ; i++)
+    for(int32_t i = raw_data.size()-1; i >= 0 ; i++)
     {
         all_points.angle.push_back(angle_min + 90 + (i * 0.36));
         new_data.x = -cos(all_points.angle[i] * (3.14159/180)) * raw_data[i];
@@ -186,9 +186,9 @@ void Process::filter_enemies()
 
 void Process::pack_data(SteerData &out)
 {
-    out.offset[0] = mid_det[0].x;
-    out.offset[1] = mid_det[1].x;
-    out.offset[DET_NUM-1] = mid_det[DET_NUM-1].x;
+    out.offset[0] = static_cast<double>(mid_det[0].x);
+    out.offset[1] = static_cast<double>(mid_det[1].x);
+    out.offset[DET_NUM-1] = static_cast<double>(mid_det[DET_NUM-1].x);
 
     out.slope[0] = slope[0];
     out.slope[DET_NUM-2] = slope[DET_NUM-2];

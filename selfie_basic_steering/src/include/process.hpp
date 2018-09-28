@@ -28,11 +28,10 @@ public:
     cv::Point right_det[DET_NUM];
     cv::Point mid_det[DET_NUM];
 
-    int offset[DET_NUM];
+    double offset[DET_NUM];
     float slope[DET_NUM-1];
 
-public:
-    
+public:    
     Process();
     void polar_to_cartesian();
     void simplify_data();
