@@ -103,8 +103,8 @@ void pathCallback(const nav_msgs::Path::ConstPtr& msg)
 // callback from laser scan
 void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
-  float laser_scan_array[100];
-  for(int i = 0; i < 100; i++)
+  float laser_scan_array[scan->ranges.size()];
+  for(int i = 0; i < scan->ranges.size(); i++)
   {
     laser_scan_array[i] = scan->ranges[i];
   }
@@ -210,11 +210,7 @@ bool categorizeLaserScan(float angle_min,float angle_max,float angle_increment,f
             path_LF_count++;
     }
 
-    if(path_RF_count>path_treshold || path_LF_count>path_treshold || path_MF_count>path_treshold)
-    {
-        //ścieżka w sektorach - szukamy przeszkody
-    }
-    else
+    if(!(path_RF_count>path_treshold || path_LF_count>path_treshold || path_MF_count>path_treshold))
     {
         return false; // ścieżka jest poza przodem - olewamy przeszkody
     }
@@ -226,13 +222,9 @@ bool categorizeLaserScan(float angle_min,float angle_max,float angle_increment,f
         float angle = i*angle_increment;
 
         //punkty które sa bliżej niż treshold
-        if(range<range_treshold)
+        if(range>range_treshold)
         {
-           //jest git - idź dalej
-        }
-        else
-        {
-            continue; //jeżeli punkt za daleko przejdź do kolejnej iteracji
+           continue; //jeżeli punkt za daleko przejdź do kolejnej iteracji
         }
 
         //przypisanie punktów do sektorów
@@ -240,25 +232,25 @@ bool categorizeLaserScan(float angle_min,float angle_max,float angle_increment,f
         //połowa zakresu 0-135
         if(angle<(angle_max-angle_min)/2)
         {
-//            if(angle>RR[0] && angle<RR[1])
-//                RR_count++;
-            if(angle>RS[0] && angle<RS[1])
-                RS_count++;
-            if(angle>RF[0] && angle<RF[1])
-                RF_count++;
-            if(angle>MF[0] && angle<MF[1])
-                MF_count++;
+//        if(angle>RR[0] && angle<RR[1])
+//          RR_count++;
+          if(angle>RS[0] && angle<RS[1])
+            RS_count++;
+          if(angle>RF[0] && angle<RF[1])
+            RF_count++;
+          if(angle>MF[0] && angle<MF[1])
+            MF_count++;
         }
         else //zakres 135-270
         {
-//            if(angle>LR[0] && angle<LR[1])
-//                LR_count++;
-            if(angle>LS[0] && angle<LS[1])
-                LS_count++;
-            if(angle>LF[0] && angle<LF[1])
-                LF_count++;
-            if(angle>MF[0] && angle<MF[1])
-                MF_count++;
+  //      if(angle>LR[0] && angle<LR[1])
+  //          LR_count++;
+          if(angle>LS[0] && angle<LS[1])
+              LS_count++;
+          if(angle>LF[0] && angle<LF[1])
+              LF_count++;
+          if(angle>MF[0] && angle<MF[1])
+              MF_count++;
         }
     }
 
