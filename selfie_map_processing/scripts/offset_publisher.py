@@ -9,6 +9,8 @@ import pickle
 
 from scipy import interpolate
 from std_msgs.msg import Float64
+from dynamic_reconfigure.server import Server
+from selfie_map_processing.cfg import MapProcessingConfig
 
 UPDATE_RATE = 50
 
@@ -24,10 +26,18 @@ def generate_interpolation(lookup_table, resolution, origin):
 
     return interpolate.interp2d(x, y, z)
 
+def config_callback(config, level):
+    global L
+    L = config['L']
+
+    rospy.loginfo("Reconfigure request: L=" + str(L) + "m")
+
+    return config
+
 if __name__ == '__main__':
     rospy.init_node('selfie_offset_publisher')
 
-    L = 0.5 # TODO Set as parameter
+    srv = Server(MapProcessingConfig, config_callback)
 
     # Read output of map preprocessing
     filename = sys.argv[1]
