@@ -9,6 +9,7 @@ import pickle
 import numpy as np
 
 from scipy.interpolate import RegularGridInterpolator
+from selfie_map_processing.msg import PathWithMeta
 from std_msgs.msg import Float64
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
@@ -71,6 +72,7 @@ if __name__ == '__main__':
     # Announce topic publishers
     offset_pub = rospy.Publisher('steering_state', Float64, queue_size=UPDATE_RATE)
     path_pub = rospy.Publisher('path', Path, queue_size=UPDATE_RATE)
+    path_with_meta_pub = rospy.Publisher('path_with_meta', PathWithMeta, queue_size=UPDATE_RATE)
     width_pub = rospy.Publisher('track_width', Float64, queue_size=UPDATE_RATE)
 
     # Configure transform listener
@@ -108,12 +110,15 @@ if __name__ == '__main__':
 
         offset_pub.publish(Float64(offset + L*math.sin(theta)))
 
-        path = Path()
-        path.header.frame_id = 'map'
-        path.poses = []
+        path_with_meta = PathWithMeta()
+        path_with_meta.path = Path()
+        path_with_meta.path.header.frame_id = 'map'
+        path_with_meta.path.poses = []
+        path_with_meta.track_width = []
 
         for i in range(20):
-            point = pathpoints[(closest_idx + i) % len(pathpoints)]
+            point_idx = (closest_idx + i) % len(pathpoints)
+            point = pathpoints[point_idx]
 
             pose = PoseStamped()
             pose.header.frame_id = 'map'
@@ -121,9 +126,13 @@ if __name__ == '__main__':
             pose.pose.position.x = point[0]
             pose.pose.position.y = point[1]
 
-            path.poses.append(pose)
+            path_with_meta.path.poses.append(pose)
 
-        path_pub.publish(path)
+            width = widths[point_idx]
+            path_with_meta.track_width.append(width)
+
+        path_with_meta_pub.publish(path_with_meta)
+        path_pub.publish(path_with_meta.path)
 
         width = widths[closest_idx]
         width_pub.publish(width)
