@@ -11,6 +11,7 @@ double speed = 0;
 double roll = 0;
 double pitch = 0;
 double yaw = 0;
+double lastYaw = 0;
 
 double base_yaw = 0;
 bool yaw_initialized = false;
@@ -69,6 +70,7 @@ void distanceCallback(const std_msgs::Float32 &msg)
 void imuCallback(const sensor_msgs::Imu &msg)
 {
 
+  lastYaw = yaw;
   vyaw = msg.angular_velocity.z;
 
   tf::Quaternion q(
@@ -84,11 +86,19 @@ void imuCallback(const sensor_msgs::Imu &msg)
     base_yaw = yaw;
     yaw_initialized = true;
   }
+  if (speed == 0) {
+    base_yaw = yaw - lastYaw;
+  }
 
   yaw -= base_yaw;
 
   // quaternion created from yaw
   odom_quat = tf::createQuaternionMsgFromYaw(yaw);
+}
+
+void speedCallback(const std_msgs::Float32 &msg)
+{
+  speed = msg.data;
 }
 
 int main(int argc, char** argv)
@@ -101,11 +111,12 @@ int main(int argc, char** argv)
   odom_pub = n.advertise<nav_msgs::Odometry>("/odom", 50);
   ros::Subscriber sub_distance = n.subscribe("/distance", 50, distanceCallback);
   ros::Subscriber sub_imu = n.subscribe("/imu", 50, imuCallback);
+  ros::Subscriber sub_speed = n.subscribe("/speed", 50, speedCallback);
 
   rear_axis_frame = n.param<std::string>("rear_axis_frame", "base_link");
   tf::TransformBroadcaster odom_broadcaster;
 
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(250);
 
   while (n.ok())
   {
