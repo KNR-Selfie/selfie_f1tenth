@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(recovery)
+project(recovery_behaviour)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,25 +8,27 @@ project(recovery)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  ackermann_msgs
   message_generation
-  std_msgs
-  genmsg
   roscpp
+  sensor_msgs
+  std_msgs
+)
+
+generate_messages(
+   DEPENDENCIES
+  std_msgs
   sensor_msgs
   ackermann_msgs
 )
 
+add_executable(recovery_behaviour src/recovery_behaviour.cpp src/commands.cpp)
+target_link_libraries(recovery_behaviour ${catkin_LIBRARIES})
+add_dependencies(recovery_behaviour recovery_behaviour_generate_messages_cpp)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-add_executable(recovery src/recovery.cpp)
-target_link_libraries(recovery ${catkin_LIBRARIES})
-add_dependencies(recovery recovery_generate_messages_cpp)
-
-add_executable(is_stucked src/is_stucked.cpp)
-target_link_libraries(is_stucked ${catkin_LIBRARIES})
-add_dependencies(is_stucked is_stucked_generate_messages_cpp)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -79,14 +81,10 @@ add_dependencies(is_stucked is_stucked_generate_messages_cpp)
 # )
 
 ## Generate added messages and services with any dependencies listed here
- generate_messages(
-    DEPENDENCIES
-   std_msgs
-   sensor_msgs
-   ackermann_msgs
- )
-
-
+# generate_messages(
+#   DEPENDENCIES
+#   ackermann_msgs#   sensor_msgs#   std_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -119,8 +117,8 @@ add_dependencies(is_stucked is_stucked_generate_messages_cpp)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES recovery
-#  CATKIN_DEPENDS roscpp sensor_msgs
+#  LIBRARIES recovery_behaviour
+#  CATKIN_DEPENDS ackerman_msgs message_generation roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 
@@ -137,7 +135,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/recovery.cpp
+#   src/${PROJECT_NAME}/recovery_behaviour.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -148,7 +146,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/recovery_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/recovery_behaviour_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -205,7 +203,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_recovery.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_recovery_behaviour.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
