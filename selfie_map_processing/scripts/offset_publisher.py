@@ -63,12 +63,15 @@ if __name__ == '__main__':
                                           method='nearest')
 
     pathpoints = map_data['pathpoints']
+    directions = map_data['directions']
+    widths = map_data['widths']
 
     rospy.loginfo('Map data loaded')
 
     # Announce topic publishers
     offset_pub = rospy.Publisher('steering_state', Float64, queue_size=UPDATE_RATE)
     path_pub = rospy.Publisher('path', Path, queue_size=UPDATE_RATE)
+    width_pub = rospy.Publisher('track_width', Float64, queue_size=UPDATE_RATE)
 
     # Configure transform listener
     tf_buffer = tf2_ros.Buffer()
@@ -100,7 +103,7 @@ if __name__ == '__main__':
 
         offset = eval_offset([y, x])[0]
         closest_idx = int(eval_closest([y, x])[0])
-        path_direction = map_data['directions'][closest_idx]
+        path_direction = directions[closest_idx]
         theta = euler[2] - path_direction
 
         offset_pub.publish(Float64(offset + L*math.sin(theta)))
@@ -121,5 +124,8 @@ if __name__ == '__main__':
             path.poses.append(pose)
 
         path_pub.publish(path)
+
+        width = widths[closest_idx]
+        width_pub.publish(width)
 
         rate.sleep()
