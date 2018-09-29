@@ -18,6 +18,7 @@
 using namespace std;
 
 void getLaserScan (const sensor_msgs::LaserScan &sens_msg);
-bool categorizeLaserScan(float angle_min,float angle_max,float angle_increment,float *ranges,float left,float right, float pos_x, float pos_y, vector<float> path_x, vector<float> path_y);
+void categorize(float angle_min, float angle_max, float angle_increment, float *ranges,
+ float pos_x, float pos_y, vector<float> path_x, vector<float> path_y, vector<float>path_width, float *offset);
 
     #endif // OBSTACLES_H
