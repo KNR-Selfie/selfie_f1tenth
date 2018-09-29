@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdint.h>
 #include "def.hpp"
+#include "ros/ros.h"
 
 class Process
 {
@@ -22,7 +23,7 @@ private:
 
 public:
     int max_dist = 45;
-    int thresh_simplify = 10;
+    int thresh_simplify = 0;
 
     cv::Point left_det[DET_NUM];
     cv::Point right_det[DET_NUM];

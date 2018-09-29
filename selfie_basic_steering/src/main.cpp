@@ -1,4 +1,3 @@
-#include "ros/ros.h"
 #include "std_msgs/Float64.h"
 #include "sensor_msgs/LaserScan.h"
 
@@ -9,16 +8,16 @@ SteerData data_to_send;
 
 void lidarCallback(const sensor_msgs::LaserScan::ConstPtr& message);
 
-ros::NodeHandle node;
-  ros::Publisher steering_publisher = node.advertise<std_msgs::Float64>("steering_state", 100);
-  ros::Subscriber lidar_subscriber = node.subscribe("scan", 1, lidarCallback);
-  std_msgs::Float64 state_msg;
+ros::Publisher steering_publisher;
+std_msgs::Float64 state_msg;
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "basic_steering");
-  
-  
+  ros::NodeHandle node;
+  steering_publisher = node.advertise<std_msgs::Float64>("steering_state", 100);
+  ros::Subscriber lidar_subscriber = node.subscribe("scan", 1, lidarCallback);
+    
   while (ros::ok())
   {
   
@@ -51,5 +50,6 @@ void lidarCallback(const sensor_msgs::LaserScan::ConstPtr& message)
     process.pack_data(data_to_send);
     state_msg.data = data_to_send.offset[1]*0.8 + data_to_send.offset[0]*0.2;
     steering_publisher.publish(state_msg);
+    ROS_INFO("Output: %d", state_msg.data);
 }
 
