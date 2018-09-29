@@ -35,7 +35,7 @@ bool check_lidar_data(const sensor_msgs::LaserScan &ms);
 
 
 void scanCallback(const sensor_msgs::LaserScan &ms)
-{  //TODO!!!! detecting wall in front of my face
+{
 
   if(check_lidar_data(ms) == 1)
     obstacle = 1;
@@ -54,25 +54,51 @@ void recoveryCallback(const std_msgs::Bool &ms)
 
 int main(int argc, char **argv)
 {
+
+  if(argc != 2 || argc != 3)
+  {
+    std:: cout << "use one or zero parameters\n";
+    return 0;
+  }
+
   ros::init(argc, argv, "recovery_behaviour");
   ros::NodeHandle n;
 
   ros::Publisher drive_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>("/drive", 50);
   ros::Subscriber scan_sub = n.subscribe("/scan", 1000, scanCallback);
   ros::Subscriber obstacle_sub = n.subscribe("/recovery_mode", 1000, recoveryCallback);
-  while(ros::ok())
+  if(argc == 2)
   {
-    ros::spinOnce();
-    if(obstacle == 0)
+    while(ros::ok())
     {
-     std::cout << "in forward move\n";
-     move_forward(drive_pub, 0);
-    }else
+      ros::spinOnce();
+      if(obstacle == 0)
+      {
+        std::cout << "in forward move\n";
+      //  move_forward(drive_pub, 0);
+      }else
+      {
+        std::cout << "in recovery mode\n";
+      //  retreat(drive_pub, 0.4, 1);
+      }
+    }
+  }else
+  {
+    while(ros::ok())
     {
-      std::cout << "in recovery mode\n";
-      retreat(drive_pub, 0.4, 1);
+      ros::spinOnce();
+      if(obstacle == 0)
+      {
+        x//std::cout << "in forward move\n";
+       move_forward(drive_pub, 0);
+      }else
+      {
+      //  std::cout << "in recovery mode\n";
+        retreat(drive_pub, 0.4, 1);
+      }
     }
   }
+
   ros::spinOnce();
   return 0;
 }
