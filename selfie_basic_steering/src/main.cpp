@@ -1,4 +1,4 @@
-#include "ros/ros.h"
+
 #include "std_msgs/Float64.h"
 #include "sensor_msgs/LaserScan.h"
 
@@ -34,12 +34,11 @@ int main(int argc, char **argv)
 void lidarCallback(const sensor_msgs::LaserScan::ConstPtr& message)
 {
     // Copy data
-    process.angle_min = -message->angle_max;
+    process.angle_min = -(message->angle_max);
     process.raw_data.clear();
     for(uint32_t i = 0; i<message->ranges.size(); i++){
         process.raw_data.push_back (message->ranges[i]);
     }
-
     // Process data
     process.polar_to_cartesian();
     process.simplify_data();
@@ -53,5 +52,6 @@ void lidarCallback(const sensor_msgs::LaserScan::ConstPtr& message)
     process.pack_data(data_to_send);
     state_msg.data = data_to_send.offset[1]*0.8 + data_to_send.offset[0]*0.2;
     steering_publisher.publish(state_msg);
+    ROS_INFO("Output %d",state_msg.data);
 }
 

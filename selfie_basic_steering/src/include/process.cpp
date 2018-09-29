@@ -11,7 +11,7 @@ void Process::polar_to_cartesian()
     all_points.pos.clear();
     all_points.angle.clear();
 
-    for(int32_t i = raw_data.size()-1; i >= 0 ; i++)
+    for(int32_t i = raw_data.size()-1; i >= 0 ; i--)
     {
         all_points.angle.push_back(angle_min + 90 + (i * 0.36));
         new_data.x = -cos(all_points.angle[i] * (3.14159/180)) * raw_data[i];
@@ -117,6 +117,9 @@ void Process::split_poins_equally()
             for(uint32_t k = i; k <= j; k++)
                 rejected_points.pos.push_back(all_simplified.pos[k]);
         }
+    }
+    else{
+        ROS_ERROR("Not enough simplified data - change threshold");
     }
 }
 
