@@ -25,6 +25,7 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
     if(map_initialized){
         scan = msg;
         float read_angle = scan.angle_max;
+        ROS_INFO("min: %.3f         max: %.3f", scan.range_min, scan.range_max);
         int i = 0;
         for(read_angle; read_angle >= scan.angle_min; read_angle -= scan.angle_increment){
             if(scan.ranges[i] >= scan.range_min && scan.ranges[i] <= scan.range_max){
@@ -76,7 +77,7 @@ int main(int argc, char** argv){
 
     ros::NodeHandle n("~");
 
-    obstacles_pub = n.advertise<nav_msgs::OccupancyGrid>("/obstacles_scan", 50);
+    obstacles_pub = n.advertise<sensor_msgs::LaserScan>("/obstacles_scan", 50);
     ros::Subscriber sub_scan = n.subscribe("/scan", 50, scanCallback);
     ros::Subscriber sub_map = n.subscribe("/map", 50, mapCallback);
 
