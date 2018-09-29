@@ -25,7 +25,6 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
     if(map_initialized){
         scan = msg;
         float read_angle = scan.angle_max;
-        ROS_INFO("min: %.3f         max: %.3f", scan.range_min, scan.range_max);
         int i = 0;
         for(read_angle; read_angle >= scan.angle_min; read_angle -= scan.angle_increment){
             if(scan.ranges[i] >= scan.range_min && scan.ranges[i] <= scan.range_max){
@@ -56,7 +55,7 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
                     }
                     temp_scan_range += map.info.resolution;
                 }
-                if(wall == false){
+                if(wall == true){
                     scan.ranges[i] = scan.range_max + 1;
                 }
             }
