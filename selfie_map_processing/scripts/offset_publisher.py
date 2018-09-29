@@ -10,12 +10,14 @@ import numpy as np
 
 from scipy.interpolate import RegularGridInterpolator
 from std_msgs.msg import Float64
+from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped
 from dynamic_reconfigure.server import Server
 from selfie_map_processing.cfg import MapProcessingConfig
 
 UPDATE_RATE = 50
 
-def generate_interpolation(lookup_table, resolution, origin):
+def generate_interpolation(lookup_table, resolution, origin, method='linear'):
     dim_x = lookup_table.shape[1] * resolution
     dim_y = lookup_table.shape[0] * resolution
 
@@ -31,7 +33,7 @@ def generate_interpolation(lookup_table, resolution, origin):
     # Account for y direction being inverted in images
     lookup_table = np.flipud(lookup_table)
 
-    return RegularGridInterpolator((y, x), lookup_table)
+    return RegularGridInterpolator((y, x), lookup_table, method=method)
 
 def config_callback(config, level):
     global L
@@ -55,14 +57,18 @@ if __name__ == '__main__':
                                          map_data['resolution'],
                                          map_data['origin'])
 
-    eval_direction = generate_interpolation(map_data['directions'],
-                                            map_data['resolution'],
-                                            map_data['origin'])
+    eval_closest = generate_interpolation(map_data['closests'],
+                                          map_data['resolution'],
+                                          map_data['origin'],
+                                          method='nearest')
+
+    pathpoints = map_data['pathpoints']
 
     rospy.loginfo('Map data loaded')
 
-    # Announce topic publisher
+    # Announce topic publishers
     offset_pub = rospy.Publisher('steering_state', Float64, queue_size=UPDATE_RATE)
+    path_pub = rospy.Publisher('path', Path, queue_size=UPDATE_RATE)
 
     # Configure transform listener
     tf_buffer = tf2_ros.Buffer()
@@ -93,10 +99,27 @@ if __name__ == '__main__':
         euler = tf_conversions.transformations.euler_from_quaternion(quaternion)
 
         offset = eval_offset([y, x])[0]
-        path_direction = eval_direction([y, x])[0]
-
-        theta = path_direction - euler[2]
+        closest_idx = int(eval_closest([y, x])[0])
+        path_direction = map_data['directions'][closest_idx]
+        theta = euler[2] - path_direction
 
         offset_pub.publish(Float64(offset + L*math.sin(theta)))
+
+        path = Path()
+        path.header.frame_id = 'map'
+        path.poses = []
+
+        for i in range(20):
+            point = pathpoints[(closest_idx + i) % len(pathpoints)]
+
+            pose = PoseStamped()
+            pose.header.frame_id = 'map'
+
+            pose.pose.position.x = point[0]
+            pose.pose.position.y = point[1]
+
+            path.poses.append(pose)
+
+        path_pub.publish(path)
 
         rate.sleep()
