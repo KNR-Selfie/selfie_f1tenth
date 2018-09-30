@@ -8,33 +8,13 @@ import sys
 import pickle
 import numpy as np
 
-from scipy.interpolate import RegularGridInterpolator
-from selfie_map_processing.msg import PathWithMeta
 from std_msgs.msg import Float64
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 from dynamic_reconfigure.server import Server
 from selfie_map_processing.cfg import MapProcessingConfig
 
-UPDATE_RATE = 50
-
-def generate_interpolation(lookup_table, resolution, origin, method='linear'):
-    dim_x = lookup_table.shape[1] * resolution
-    dim_y = lookup_table.shape[0] * resolution
-
-    start_x = map_data['origin'][0]
-    start_y = map_data['origin'][1]
-
-    stop_x = start_x + dim_x
-    stop_y = start_y + dim_y
-
-    x = np.linspace(start_x, stop_x, dim_x/resolution, endpoint=False)
-    y = np.linspace(start_y, stop_y, dim_y/resolution, endpoint=False)
-
-    # Account for y direction being inverted in images
-    lookup_table = np.flipud(lookup_table)
-
-    return RegularGridInterpolator((y, x), lookup_table, method=method)
+UPDATE_RATE = 100
 
 def config_callback(config, level):
     global L
@@ -54,26 +34,11 @@ if __name__ == '__main__':
     with open(filename, 'rb') as f:
         map_data = pickle.load(f)
 
-    eval_offset = generate_interpolation(map_data['offsets'],
-                                         map_data['resolution'],
-                                         map_data['origin'])
-
-    eval_closest = generate_interpolation(map_data['closests'],
-                                          map_data['resolution'],
-                                          map_data['origin'],
-                                          method='nearest')
-
     pathpoints = map_data['pathpoints']
-    directions = map_data['directions']
-    widths = map_data['widths']
-
-    rospy.loginfo('Map data loaded')
 
     # Announce topic publishers
     offset_pub = rospy.Publisher('steering_state', Float64, queue_size=UPDATE_RATE)
     path_pub = rospy.Publisher('path', Path, queue_size=UPDATE_RATE)
-    path_with_meta_pub = rospy.Publisher('path_with_meta', PathWithMeta, queue_size=UPDATE_RATE)
-    width_pub = rospy.Publisher('track_width', Float64, queue_size=UPDATE_RATE)
 
     # Configure transform listener
     tf_buffer = tf2_ros.Buffer()
@@ -103,38 +68,41 @@ if __name__ == '__main__':
 
         euler = tf_conversions.transformations.euler_from_quaternion(quaternion)
 
-        offset = eval_offset([y, x])[0]
-        closest_idx = int(eval_closest([y, x])[0])
-        path_direction = directions[closest_idx]
-        theta = euler[2] - path_direction
+        point = (x, y)
+        current_idx = np.argmin(np.sum(np.square(np.array(point) - pathpoints), 1))
+        current_point = pathpoints[current_idx]
+        next_idx = (current_idx + 1) % len(pathpoints)
+        next_point = pathpoints[next_idx]
+        alpha = math.atan2(next_point[1] - current_point[1],
+                           next_point[0] - current_point[0])
 
-        offset_pub.publish(Float64(offset + L*math.sin(theta)))
+        theta = euler[2] - alpha
 
-        path_with_meta = PathWithMeta()
-        path_with_meta.path = Path()
-        path_with_meta.path.header.frame_id = 'map'
-        path_with_meta.path.poses = []
-        path_with_meta.track_width = []
+        dx = x - current_point[0]
+        dy = y - current_point[1]
 
-        for i in range(20):
-            point_idx = (closest_idx + i) % len(pathpoints)
-            point = pathpoints[point_idx]
+        offset = -dx*math.sin(alpha) + dy*math.cos(alpha)
+
+        offset_pub.publish(offset + L*np.sin(theta))
+
+        ### DEBUG ###
+
+        path = Path()
+        path.header.frame_id = 'map'
+        path.poses = []
+
+        for i in range(5):
+            idx = (current_idx + i) % len(pathpoints)
+            pnt = pathpoints[idx]
 
             pose = PoseStamped()
             pose.header.frame_id = 'map'
 
-            pose.pose.position.x = point[0]
-            pose.pose.position.y = point[1]
+            pose.pose.position.x = pnt[0]
+            pose.pose.position.y = pnt[1]
 
-            path_with_meta.path.poses.append(pose)
+            path.poses.append(pose)
 
-            width = widths[point_idx]
-            path_with_meta.track_width.append(width)
-
-        path_with_meta_pub.publish(path_with_meta)
-        path_pub.publish(path_with_meta.path)
-
-        width = widths[closest_idx]
-        width_pub.publish(width)
+        path_pub.publish(path)
 
         rate.sleep()
