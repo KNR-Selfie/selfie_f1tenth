@@ -8,6 +8,7 @@ project(selfie_obstacles)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  selfie_map_processing
   nav_msgs
   roscpp
   sensor_msgs

@@ -1,4 +1,6 @@
 #include "obstacles.h"
+#include "selfie_map_processing/PathWithMeta.h"
+#include <iostream>
 
 using namespace std;
 
@@ -8,6 +10,9 @@ void wallDistanceCallback(const std_msgs::Float32MultiArray::ConstPtr& msg);
 void positionCallback(const geometry_msgs::Pose::ConstPtr& msg);
 void obstaclesExist(const std_msgs::Bool::ConstPtr& exist);
 void widthCallback(const std_msgs::Float32MultiArray::ConstPtr& msg);
+
+void path_with_metaCallback(const selfie_map_processing::PathWithMeta::ConstPtr& msg);
+
 
 int path_MF_count = 0;
 int path_RF_count = 0;
@@ -59,43 +64,48 @@ float Offset = 0;               // path offset
 vector<float> Path_width;       // track width
 
 int main(int argc, char** argv)
-{
+{   ROS_INFO("main begin\r\n");
     ros::init(argc, argv, "selfie_obstacles");
     ros::NodeHandle n;
-
-    ros::Publisher obstackles_publisher = n.advertise<std_msgs::Bool>("obstacles_exist", 100);
-    ros::Publisher offset_publisher = n.advertise<std_msgs::Float32>("/offset", 100);
-    ros::Subscriber path_subscriber = n.subscribe("path", 1, pathCallback);
-    ros::Subscriber laserScan_subscriber = n.subscribe("/obstacles_scan", 1, laserScanCallback);
-    ros::Subscriber position_subscriber = n.subscribe("position", 1, positionCallback);
-    ros::Subscriber width_subscriber = n.subscribe("width", 1, widthCallback);
-
+    ROS_INFO("definitions of callbacks \r\n");
+    ros::Publisher offset_publisher = n.advertise<std_msgs::Float32>("/offset", 50);
+    ros::Subscriber path_with_meta_subscriber = n.subscribe("/path_with_meta", 50, path_with_metaCallback);
+    ros::Subscriber laserScan_subscriber = n.subscribe("/scan", 50, laserScanCallback);
+    //ros::Subscriber position_subscriber = n.subscribe("/move_base_simple/goal", 1, positionCallback);
+    //ros::Subscriber width_subscriber = n.subscribe("width", 1, widthCallback);
+    ROS_INFO("loop rate \r\n");
     ros::Time current_time;
     ros::Rate loop_rate(10);
 
+    ROS_INFO("before while \r\n");
     while (ros::ok())
     {
+    ROS_INFO("SPIN");
     ros::spinOnce();
+    ROS_INFO("TIME");
     current_time = ros::Time::now();
 
-    std_msgs::Bool obst_exist;
-    float offset;
-    categorize(Angle_min, Angle_max, Angle_increment, Ranges, Pos_x, Pos_y, Path_x, Path_y, Path_width, &offset);
+    float offset = 1;
+
+    //categorize(Angle_min, Angle_max, Angle_increment, Ranges, Pos_x, Pos_y, Path_x, Path_y, Path_width, &offset);
     std_msgs::Float32 offset_msg;
+    ROS_INFO("Przypisanie");
     offset_msg.data = offset;
-    obstackles_publisher.publish(obst_exist);
+    ROS_INFO("Publisher");
     offset_publisher.publish(offset_msg);
+    ROS_INFO("rate sleep");
     loop_rate.sleep();
   }
+
 }
 
-//callback from path 
-void pathCallback(const nav_msgs::Path::ConstPtr& msg)
-{
-  // declare variables
-  std::vector<geometry_msgs::PoseStamped> pos = msg->poses;
+// callback from path with meta data 
+void path_with_metaCallback(const selfie_map_processing::PathWithMeta::ConstPtr& msg)
+{   ROS_INFO("metaCll");
+  nav_msgs::Path pth = msg->path;
+  
+  std::vector<geometry_msgs::PoseStamped> pos = pth.poses;
 
-  // clear vectors
   Path_x.clear();
   Path_y.clear();
 
@@ -104,7 +114,14 @@ void pathCallback(const nav_msgs::Path::ConstPtr& msg)
   {
     Path_x.push_back(it->pose.position.x);
     Path_y.push_back(it->pose.position.y);
-  }  
+    //Path_width.push_back(it->width);
+  }
+  for(int i = 0;i<pos.size();i++)
+  {
+      float width_mes = msg->track_width[i];
+      Path_width.push_back(width_mes);
+  }
+  ROS_INFO("meta_end");
 }
 
 // callback from laser scan
@@ -119,17 +136,6 @@ void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
   Angle_min = scan->angle_min;
   Angle_max = scan->angle_max;
   Angle_increment= scan->angle_increment;
-}
-
-// callback from track width
-void widthCallback(const std_msgs::Float32MultiArray::ConstPtr& width)
-{
-  Path_width.clear();
-
-  for(int i = 0; i < width->data.size(); i++)
-  {
-    Path_width.push_back(width->data[i]);
-  }
 }
 
 // callback from position
@@ -148,7 +154,7 @@ void categorize(float angle_min, float angle_max, float angle_increment, float *
     vector <float> left_wall_pos;
     vector <float> right_wall_pos;
 
-    int path_size = 0;
+    int path_size = 1;
     
     path_MF_count = 0;
     path_RF_count = 0;
