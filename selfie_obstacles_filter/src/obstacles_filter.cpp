@@ -12,8 +12,7 @@ geometry_msgs::TransformStamped transformStamped;
 bool map_initialized = false;
 double roll,pitch,yaw;
 
-float wall_obstacle_error = 0.4; //m
-int wall_obstacle_error_iterations;
+float wall_obstacle_error = 0.2; //m    // one direction
 
 ros::Publisher obstacles_pub;
 tf2_ros::Buffer tfBuffer;
@@ -29,9 +28,15 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
         for(read_angle; read_angle >= scan.angle_min; read_angle -= scan.angle_increment){
             if(scan.ranges[i] >= scan.range_min && scan.ranges[i] <= scan.range_max){
 
-                float temp_scan_range = scan.ranges[i] - wall_obstacle_error / 2;
+                float temp_scan_range = scan.ranges[i] - wall_obstacle_error;
+                if(temp_scan_range < 0)
+                    temp_scan_range = 0;         
+                float delta_range = std::min(map.info.resolution/sin(yaw +read_angle), map.info.resolution/cos(yaw +read_angle));
+                if(delta_range < map.info.resolution)
+                    delta_range = map.info.resolution;
                 bool wall = false;
-                for(int j = 0;j <= wall_obstacle_error_iterations; j++){
+                float loop_end = temp_scan_range + 2 * wall_obstacle_error;
+                for(temp_scan_range;temp_scan_range <= loop_end; temp_scan_range += delta_range){
 
                     float x = act_pose.position.x + temp_scan_range * cos(yaw + read_angle);
                     float y = act_pose.position.y + temp_scan_range * sin(yaw + read_angle);
@@ -53,7 +58,6 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
                         wall = true;
                         break;
                     }
-                    temp_scan_range += map.info.resolution;
                 }
                 if(wall == true){
                     scan.ranges[i] = scan.range_max + 1;
@@ -68,7 +72,6 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
 void mapCallback(const nav_msgs::OccupancyGrid &msg){
     map = msg;
     map_initialized = true;
-    wall_obstacle_error_iterations = int(wall_obstacle_error / map.info.resolution);
 }
 
 int main(int argc, char** argv){
@@ -80,7 +83,7 @@ int main(int argc, char** argv){
     ros::Subscriber sub_scan = n.subscribe("/scan", 50, scanCallback);
     ros::Subscriber sub_map = n.subscribe("/map", 50, mapCallback);
 
-    n.param<float>("error", wall_obstacle_error, 0.4);
+    n.param<float>("error", wall_obstacle_error, 0.2);
     ROS_INFO("error is: %.2f", wall_obstacle_error);
 
     tf2_ros::TransformListener tfListener(tfBuffer);
@@ -104,7 +107,7 @@ int get_index(int x, int y){
 void get_act_pose(){
     while(ros::ok()){
         try{
-        transformStamped = tfBuffer.lookupTransform("map", "base_link",ros::Time(0));
+        transformStamped = tfBuffer.lookupTransform("map", "laser",ros::Time(0));
         }
         catch (tf2::TransformException &ex) {
             continue;
@@ -115,16 +118,12 @@ void get_act_pose(){
     act_pose.position.x = transformStamped.transform.translation.x;
     act_pose.position.y = transformStamped.transform.translation.y;
     act_pose.position.z = transformStamped.transform.translation.z;
-    act_pose.orientation.x = transformStamped.transform.rotation.x;
-    act_pose.orientation.y = transformStamped.transform.rotation.y;
-    act_pose.orientation.z = transformStamped.transform.rotation.z;
-    act_pose.orientation.w = transformStamped.transform.rotation.w;
 
     tf::Quaternion q(
-        act_pose.orientation.x,
-        act_pose.orientation.y,
-        act_pose.orientation.z,
-        act_pose.orientation.w);
+        transformStamped.transform.rotation.x,
+        transformStamped.transform.rotation.y,
+        transformStamped.transform.rotation.z,
+        transformStamped.transform.rotation.w);
     tf::Matrix3x3 m(q);
     m.getRPY(roll, pitch, yaw);
 }
