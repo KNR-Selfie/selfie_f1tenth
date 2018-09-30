@@ -5,17 +5,7 @@
 
 #define ANGLE_OFFSET 0
 #define THRESH_SIMPLIFY 20
-#define THRESH_CONTINOUS 50
-
-// Namespace symulujący OpenCV
-// namespace cv
-// {
-//     struct Point
-//     {
-//         int x;
-//         int y;
-//     };
-// }
+#define THRESH_CONTINOUS 500
 
 // ROS and trajectory variables
 sensor_msgs::LaserScan scan;
@@ -27,19 +17,16 @@ struct LidarReading
 {
     std::vector<Point> pos; // Wektor kolejnych pozycji obliczonych z promieni
     std::vector<double> angle;  // Wektor kątów odpowiadających kolejnym punktom powyżej
-}lidarReading;
+}lidarReading, lidarReading_filtered;
 
-// Funkcja zamieniająca wsp biegunowe na kartezjańskie
+void filter_Y(LidarReading &input, LidarReading &output);
 void polar_to_cartesian(std::vector<float> &input, LidarReading &output);
-
-// Funkcja ustala stałą gęstość punktów, na wejście dajemy wektor punktów z Sicka
 void simplify_data(LidarReading &input_output);
-
-// Funkcja dziląca na prawe i lewe linie
 void split_poins_equally(LidarReading &input, std::vector<Point> &left_points, std::vector<Point> &right_points, std::vector<Point> &rejected_points);
 
-void laserScanCallback(const sensor_msgs::LaserScan &msg);
 void marczuk_spline(vector<Point> right_lidar_vec,vector<Point> left_lidar_vec,float &angle, int velocity);
+
+void laserScanCallback(const sensor_msgs::LaserScan &msg);
 
 spline_t left_lidar_spline;
 spline_t right_lidar_spline;
@@ -70,18 +57,14 @@ int main(int argc, char** argv)
 
     while (ros::ok())
     {
-        //("spin");
         ros::spinOnce();
-        //("time");
         current_time = ros::Time::now();
-        //("tr_f");
 
         ackermann_msgs::AckermannDrive output_ackermann;
         output_ackermann.steering_angle = angle;
         output_ackermann.speed = velocity;
         out_publisher.publish(output_ackermann);
 
-        //("sleep");
         loop_rate.sleep();
     }
 }
@@ -89,7 +72,6 @@ int main(int argc, char** argv)
 // ROS 
 void laserScanCallback(const sensor_msgs::LaserScan& msg)
 {
-    //("laser scan");
     scan = msg;
 
     input_scan.clear();
@@ -97,22 +79,19 @@ void laserScanCallback(const sensor_msgs::LaserScan& msg)
     {
         input_scan.push_back(scan.ranges[i]);
     }
-    //("%d", scan.ranges.size());
-    //("laser scan end");
 
         if(scan.ranges.size() != 0)
         {
             polar_to_cartesian(input_scan, lidarReading);
-            //("lidarReading");
             simplify_data(lidarReading);
-            //("split_points");
-            split_poins_equally(lidarReading, left_points, right_points, rejected_points);
-            //("m_f");
-            ROS_INFO("r size %d r size %d ",right_points.size(),rejected_points.size());
-            ROS_INFO("r vector; x: %d y %d",right_points[0].x,right_points[0].y);
-            ROS_INFO("l vector; x: %d y %d",left_points[0].x,left_points[0].y);
+            filter_Y(lidarReading, lidarReading_filtered);
+            split_poins_equally(lidarReading_filtered, left_points, right_points, rejected_points);
             marczuk_spline(right_points,left_points,angle,velocity);
-            //("pub");
+
+            // std::cout << XD
+            ROS_INFO("Simplify: %d", lidarReading.pos.size());
+            ROS_INFO("Filtered: %d", lidarReading_filtered.pos.size());
+            ROS_INFO("r size %d l size %d r size %d",right_points.size(),left_points.size(), rejected_points.size());
         }
 
 }
@@ -198,9 +177,11 @@ void split_poins_equally(LidarReading &input, std::vector<Point> &left_points, s
     bool left_continous = true;
     bool right_continous = true;
 
+    int tmp;
+
     if(input.pos.size() >= 3)
     {
-        if(input.pos[input.pos.size()-1].y < - 50)
+        if(input.pos[input.pos.size()-1].y < 50)
         {
             left_points.push_back(input.pos[input.pos.size()-1]);
         }
@@ -209,19 +190,20 @@ void split_poins_equally(LidarReading &input, std::vector<Point> &left_points, s
             left_continous = false;
         }
 
-        if(input.pos[0].y < - 50)
+        if(input.pos[1].y < 200)
         {
-            right_points.push_back(input.pos[0]);
+            right_points.push_back(input.pos[10]);
         }
         else
         {
             right_continous = false;
         }
 
-        for(i = 1; i < input.pos.size()-1; i++)
+        for(i = 10; i < input.pos.size()-1; i++)
         {
             if(right_continous)
             {
+                tmp = sqrt((input.pos[i].x - input.pos[i-1].x)*(input.pos[i].x - input.pos[i-1].x) + (input.pos[i].y - input.pos[i-1].y)*(input.pos[i].y - input.pos[i-1].y));
                 if(sqrt((input.pos[i].x - input.pos[i-1].x)*(input.pos[i].x - input.pos[i-1].x) + (input.pos[i].y - input.pos[i-1].y)*(input.pos[i].y - input.pos[i-1].y)) < THRESH_CONTINOUS)
                     right_points.push_back(input.pos[i]);
                 else
@@ -229,7 +211,7 @@ void split_poins_equally(LidarReading &input, std::vector<Point> &left_points, s
             }
 
             if(left_continous)
-            {
+            {//ROS_INFO("MAXIMUM");
                 j = input.pos.size()-1-i;
                 if(sqrt((input.pos[j].x - input.pos[j+1].x)*(input.pos[j].x - input.pos[j+1].x) + (input.pos[j].y - input.pos[j+1].y)*(input.pos[j].y - input.pos[j+1].y)) < THRESH_CONTINOUS)
                     left_points.push_back(input.pos[j]);
@@ -257,13 +239,11 @@ void simplify_data(LidarReading &input_output)
     Point tmp, last;
     std::vector<Point> tmp_vec_pos;
     std::vector<double> tmp_vec_angle;
-    //("push_vec");
-    //("%d", input_output.pos.size());
+
     tmp_vec_pos.push_back(input_output.pos[0]);
-    //("push_angle");
     tmp_vec_angle.push_back(input_output.angle[0]);
     last = input_output.pos[0];
-    //("for");
+
     for(uint32_t i = 1; i < input_output.pos.size() - 1; i++)
     {
         tmp.x = input_output.pos[i].x - last.x;
@@ -275,12 +255,13 @@ void simplify_data(LidarReading &input_output)
             last = input_output.pos[i];
         }
     }
-    //("input");
+
     input_output.pos.clear();
     input_output.angle.clear();
     input_output.pos = tmp_vec_pos;
     input_output.angle = tmp_vec_angle;
 }
+
 // Funkcja zamieniająca wsp biegunowe na kartezjańskie
 void polar_to_cartesian(std::vector<float> &input, LidarReading &output)
 {
@@ -291,12 +272,26 @@ void polar_to_cartesian(std::vector<float> &input, LidarReading &output)
     for(uint32_t i = 0; i < input.size(); i++)
     {
         // Obliczenie kąta odczytu
-        output.angle.push_back((i * 0.36 + ANGLE_OFFSET));
+        output.angle.push_back((i * 0.36) + ANGLE_OFFSET);
         // Obliczenie pozycji X, Y
-        new_data.x = -cos(output.angle[i]  * (3.14159/180)) * input[i];
-        new_data.y = sin(output.angle[i]  * (3.14159/180)) * input[i];
+        new_data.x = -cos(output.angle[i]  * (3.14159/180)) * input[i] * 1000;
+        new_data.y = sin(output.angle[i]  * (3.14159/180)) * input[i] * 1000;
 
         output.pos.push_back(new_data);
-        ROS_INFO("I: %d, A: %f, X;Y: %d ; %d", i, output.angle[i]  * (3.14159/180), output.pos[i].x, output.pos[i].y);
+    }
+}
+
+void filter_Y(LidarReading &input, LidarReading &output)
+{
+    output.angle.clear();
+    output.pos.clear();
+
+    for(uint32_t i = 0; i < input.pos.size(); i++)
+    {
+        if(input.pos[i].y < 30000 && input.pos[i].y > 0)
+        {
+            output.pos.push_back(input.pos[i]);
+            output.angle.push_back(input.angle[i]);
+        }
     }
 }

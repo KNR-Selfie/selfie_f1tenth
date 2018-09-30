@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   tf
-  genmsg
+  genmsg	
 )
 
 ## System dependencies are found with CMake's conventions
@@ -205,5 +205,6 @@ include_directories(
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(selfie_trajectory src/trajectory.cpp src/optimization.cpp src/spline.cpp src/tangent.cpp)
+
 target_link_libraries(selfie_trajectory ${catkin_LIBRARIES})
 add_dependencies(selfie_trajectory selfie_trajectory_generate_messages_cpp)
