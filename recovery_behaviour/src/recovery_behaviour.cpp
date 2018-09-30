@@ -3,13 +3,15 @@
 **
 **TODO: poodzielc pole widzenia na 3 czesci, jakby przszkoda byla nie dokladnie przed callym autem
 **
-**
+**IMPROTANT:: usage: first param = observed_area[meters]
+      second param = dead_line distance
 */
 #include "ros/ros.h"
 #include "ackermann_msgs/AckermannDriveStamped.h"
 #include "ros/console.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/Bool.h"
+#include <math.h>
 
 #include<iostream>
 #include<time.h>
@@ -22,7 +24,8 @@
 //#define DEAD_LINE 0.2 //in meters from LIDAR
 
 double DEAD_LINE = 0.2;     //meters counted from LIDAR
-double OBSERVED_AREA = 60; // degrees
+double OBSERVED_AREA = 0.3; // in meters
+double OBSERVED_ANGLE = 2 * std::atan(OBSERVED_AREA/(2*DEAD_LINE));
 
 bool obstacle = 0;
 bool info = 0;
@@ -62,6 +65,7 @@ int main(int argc, char **argv)
 //  ros::Subscriber obstacle_sub = n.subscribe("/recovery_mode", 1000, recoveryCallback);
   if(argc == 1)
   {
+    cout << "default angle and Dead_line values ( 60* and 20cm)\none your parameter is set to be speed\n";
     char nr = argv[1][0];;
     int desired_speed = (int)nr - 48;
     std::cout << desired_speed << std::endl;
@@ -82,11 +86,20 @@ int main(int argc, char **argv)
   }
   if(argc == 3)
   {
-    char x = argv[1][0];;
-    OBSERVED_AREA = (double)x - 48;
+    /*
+    char x = argv[1][0];
+    OBSERVED_AREA = ((double)x - 48)/10;
+    OBSERVED_ANGLE = 2 * std::atan(OBSERVED_AREA/(2*DEAD_LINE));
     x = argv[2][0];
     DEAD_LINE = ((double)x - 48)/10;
-    cout << "observed_area [degrees] = " << OBSERVED_AREA<<endl;
+    */
+    cout << "put desired observed area value[meters]:\n";
+    cin >> OBSERVED_AREA;
+    cout << "put desired DEAD_LINE distance[meters]:\n";
+    cin >> DEAD_LINE;
+    OBSERVED_ANGLE = 2*(180/PI) * std::atan(OBSERVED_AREA/(2*DEAD_LINE));
+
+    cout << "observed_angle [degrees] = " << OBSERVED_ANGLE<<endl;
     cout << "dead_line [meters/10] = " << DEAD_LINE <<endl;
 
     ros::Rate r(loop_rate);
@@ -101,6 +114,7 @@ int main(int argc, char **argv)
       {
       //  std::cout << "in recovery mode\n";
         retreat(drive_pub, 0.4, 1, 0);
+        recovery_mode = 0;
       }
       ros::spinOnce();
     }
@@ -112,17 +126,14 @@ int main(int argc, char **argv)
 
 bool check_lidar_data(const sensor_msgs::LaserScan &ms)
 {
-//  std::cout <<"ok\n";
+  using namespace std;
   deg_per_angle = ms.angle_increment * 180/PI;
-//std::cout << deg_per_angle<<std::endl;  //0.00581
   int max_angle_nr = (ms.angle_max - ms.angle_min)/ms.angle_increment;
-//  std::cout << "max_angle_nr: " << max_angle_nr<<std::endl; //510
+  cout << "mr of angles: " << max_angle_nr<<endl;
   int center_angle_nr = max_angle_nr/2;
-//  std::cout << "center_angle__nr: " << center_angle_nr << std::endl;
-  int observed_angles = OBSERVED_AREA/deg_per_angle;
+  int observed_angles = OBSERVED_ANGLE/deg_per_angle;
+  cout << "observed_angles: " << observed_angles<<endl;
   int n = center_angle_nr - observed_angles/2;
-  //OK
-//  std::cout << observed_angles <<std::endl;
   double  min = 100;
   int min_nr = 0;
   double max = 0;
