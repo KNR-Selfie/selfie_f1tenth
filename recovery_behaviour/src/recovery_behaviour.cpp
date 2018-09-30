@@ -11,6 +11,7 @@
 #include "ros/console.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/Bool.h"
+#include "std_msgs/Float32.h"
 #include <math.h>
 
 #include<iostream>
@@ -20,6 +21,7 @@
 #define LEFT 0
 #define RIGHT 1
 #define PI 3.1415926
+#define MAX_ANGLE 0.7
 //#define OBSERVED_AREA 60 //in degrees
 //#define DEAD_LINE 0.2 //in meters from LIDAR
 
@@ -50,7 +52,7 @@ void scanCallback(const sensor_msgs::LaserScan &ms)
 int main(int argc, char **argv)
 {
   using namespace std;
-
+  double speed = 0;
   if(argc != 1 && argc != 2 && argc != 3)
   {
     std:: cout << "use one, two or zero parameters\n";
@@ -61,14 +63,24 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   ros::Publisher drive_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>("/drive", 50);
+  ros::Publisher center__dist = n.advertise<std_msgs::Float32>("/from_right", 50);
   ros::Subscriber scan_sub = n.subscribe("/scan", 1000, scanCallback);
 //  ros::Subscriber obstacle_sub = n.subscribe("/recovery_mode", 1000, recoveryCallback);
   if(argc == 1)
   {
-    cout << "default angle and Dead_line values ( 60* and 20cm)\none your parameter is set to be speed\n";
+  /*  cout << "default angle and Dead_line values ( 60* and 20cm)\none your parameter is set to be speed\n";
     char nr = argv[1][0];;
     int desired_speed = (int)nr - 48;
     std::cout << desired_speed << std::endl;
+  */
+    cout << "put desired observed area value[meters]:\n";
+    cin >> OBSERVED_AREA;
+    cout << "put desired DEAD_LINE distance[meters]:\n";
+    cin >> DEAD_LINE;
+    OBSERVED_ANGLE = 2*(180/PI) * std::atan(OBSERVED_AREA/(2*DEAD_LINE));
+    cout << "observed_angle [degrees] = " << OBSERVED_ANGLE<<endl;
+    cout << "dead_line [meters/10] = " << DEAD_LINE <<endl;
+
     ros::Rate r(loop_rate);
     while(ros::ok())
     {
@@ -80,27 +92,23 @@ int main(int argc, char **argv)
       {
       //  std::cout << "in recovery mode\n";
         retreat(drive_pub, 0.4, 1, 0);
+        recovery_mode = 0;
       }
       ros::spinOnce();
     }
   }
   if(argc == 3)
   {
-    /*
-    char x = argv[1][0];
-    OBSERVED_AREA = ((double)x - 48)/10;
-    OBSERVED_ANGLE = 2 * std::atan(OBSERVED_AREA/(2*DEAD_LINE));
-    x = argv[2][0];
-    DEAD_LINE = ((double)x - 48)/10;
-    */
     cout << "put desired observed area value[meters]:\n";
     cin >> OBSERVED_AREA;
     cout << "put desired DEAD_LINE distance[meters]:\n";
     cin >> DEAD_LINE;
+    cout << "put desired speed\n";
+    cin >> speed;
     OBSERVED_ANGLE = 2*(180/PI) * std::atan(OBSERVED_AREA/(2*DEAD_LINE));
 
     cout << "observed_angle [degrees] = " << OBSERVED_ANGLE<<endl;
-    cout << "dead_line [meters/10] = " << DEAD_LINE <<endl;
+    cout << "dead_line [meters] = " << DEAD_LINE <<endl;
 
     ros::Rate r(loop_rate);
     while(ros::ok())
@@ -109,11 +117,11 @@ int main(int argc, char **argv)
       if(recovery_mode == 0)
       {
       //  std::cout << "in forward move\n";
-        move_forward(drive_pub, 0); //sending drive commands from selfie_control
+        move_forward(drive_pub, speed); //sending drive commands from selfie_control
       }else
       {
       //  std::cout << "in recovery mode\n";
-        retreat(drive_pub, 0.4, 1, 0);
+        retreat(drive_pub, 0.4, 1, MAX_ANGLE);
         recovery_mode = 0;
       }
       ros::spinOnce();

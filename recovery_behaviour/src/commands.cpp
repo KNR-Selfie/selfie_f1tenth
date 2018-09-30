@@ -33,7 +33,7 @@ void retreat(const ros::Publisher &n, double dist, double stop_time, double angl
   ros::Duration(stop_time).sleep();
 
   retreat.drive.speed = -DRIVE_SPEED;
-  retreat.drive.acceleration = 0;
+  retreat.drive.acceleration = 0.5;
   retreat.drive.jerk = 0;
   retreat.drive.steering_angle = angle;
   retreat.drive.steering_angle_velocity = 0;
