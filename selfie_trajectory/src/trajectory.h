@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OBSTACLES_H
-#define OBSTACLES_H
+#ifndef TRAJECTORY_H
+#define TRAJECTORY_H
 
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
@@ -12,13 +12,17 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32MultiArray.h>
+#include <ackermann_msgs/AckermannDrive.h>
 #include <sensor_msgs/Imu.h>
-#include <vector>
+
+
+#include "spline.hpp"
+#include "spline.h"
+#include "optimization.h"
+#include "tangent.hpp"
 
 using namespace std;
 
-void getLaserScan (const sensor_msgs::LaserScan &sens_msg);
-void categorize(float angle_min, float angle_max, float angle_increment, vector<float> ranges,
- float pos_x, float pos_y, vector<float> path_x, vector<float> path_y, vector<float>path_width, float *offset);
 
-    #endif // OBSTACLES_H
+
+#endif // TRAJECTORY_H

@@ -4,8 +4,10 @@
 
 using namespace std;
 
+sensor_msgs::LaserScan scan;
+
 void pathCallback(const nav_msgs::Path::ConstPtr& msg);
-void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
+void laserScanCallback(const sensor_msgs::LaserScan &msg);
 void wallDistanceCallback(const std_msgs::Float32MultiArray::ConstPtr& msg);
 void positionCallback(const geometry_msgs::Pose::ConstPtr& msg);
 void obstaclesExist(const std_msgs::Bool::ConstPtr& exist);
@@ -87,7 +89,7 @@ int main(int argc, char** argv)
 
     float offset = 1;
 
-    //categorize(Angle_min, Angle_max, Angle_increment, Ranges, Pos_x, Pos_y, Path_x, Path_y, Path_width, &offset);
+    //categorize(scan.angle_min, scan.angle_max, scan.angle_increment, scan.ranges, Path_width, &offset);
     std_msgs::Float32 offset_msg;
     ROS_INFO("Przypisanie");
     offset_msg.data = offset;
@@ -125,17 +127,11 @@ void path_with_metaCallback(const selfie_map_processing::PathWithMeta::ConstPtr&
 }
 
 // callback from laser scan
-void laserScanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
-{
-  float laser_scan_array[scan->ranges.size()];
-  for(int i = 0; i < scan->ranges.size(); i++)
-  {
-    laser_scan_array[i] = scan->ranges[i];
-  }
-  *Ranges = laser_scan_array[0];
-  Angle_min = scan->angle_min;
-  Angle_max = scan->angle_max;
-  Angle_increment= scan->angle_increment;
+void laserScanCallback(const sensor_msgs::LaserScan& msg)
+{   
+  ROS_INFO("laser scan");
+  scan = msg;
+  ROS_INFO("laser scan end");
 }
 
 // callback from position
@@ -146,9 +142,11 @@ void positionCallback(const geometry_msgs::Pose::ConstPtr& position)
 }
 
 // categorize obstacles
-void categorize(float angle_min, float angle_max, float angle_increment, float *ranges, float pos_x,
- float pos_y, vector<float> path_x, vector<float> path_y, vector<float>path_width, float *offset)
-{
+void categorize(float angle_min, float angle_max, float angle_increment, vector<float> ranges, 
+vector<float> path_x, vector<float> path_y, vector<float>path_width, float *offset)
+{   
+    float  pos_x = path_x[0];
+    float pos_y = path_y[0];
     vector<float> path_range;
     vector<float> path_fi;
     vector <float> left_wall_pos;
