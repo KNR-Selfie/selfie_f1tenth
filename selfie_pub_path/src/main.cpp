@@ -10,7 +10,7 @@ int main(int argc, char** argv)
   geometry_msgs::PoseStamped pose;
   ros::Rate loop_rate(10000000);
 
-  path_msg.header.frame_id = 'path';
+  path_msg.header.frame_id = 'my_frame';
   //path_msg.header.stamp = plan[0].header.stamp;
   pose.pose.position.x = 0;
   pose.pose.position.y = 0;
@@ -33,7 +33,8 @@ int main(int argc, char** argv)
     ros::spinOnce();
     ros::Time now = ros::Time::now();
     path_msg.poses.clear();
-
+    path_msg.header.frame_id = "map";
+    pose.header.frame_id = "map";
     //float add_c_x = 0.1;
     //float add_c_y = 0.2;
     //1
@@ -117,7 +118,7 @@ int main(int argc, char** argv)
       dir = 1;
       b = -4.9;
     }
-    
+    //path_msg.poses.header.frame_id = 'base_link';
     path_publisher.publish(path_msg);
     loop_rate.sleep();
   }
