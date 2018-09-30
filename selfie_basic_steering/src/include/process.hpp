@@ -12,18 +12,18 @@ public:
     float angle_min;
     std::vector<long> raw_data;
 
+    LidarReading left_points;
+    LidarReading right_points;
 private:
     LidarReading all_points;
     LidarReading all_simplified;
-    LidarReading left_points;
-    LidarReading right_points;
     LidarReading rejected_points;
     LidarReading enemies_points;
     LidarReading trash_points;
 
 public:
     int max_dist = 45;
-    int thresh_simplify = 1;
+    int thresh_simplify = 0;
 
     cv::Point left_det[DET_NUM];
     cv::Point right_det[DET_NUM];

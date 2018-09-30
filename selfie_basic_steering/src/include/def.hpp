@@ -13,7 +13,15 @@ struct Point
     int x;
     int y;
 };
+
+struct Point3D
+{
+    int x;
+    int y;
+    int z;
+};
 }
+
 
 struct LidarReading
 {
