@@ -15,49 +15,42 @@
 #include<time.h>
 
 #define SLEEP_TIME 1
-#define DRIVE_SPEED 0.1
-#define MAX_ANGLE 0.7
 #define LEFT 0
 #define RIGHT 1
 #define PI 3.1415926
-#define OBSERVED_AREA 60 //in degrees
-#define DEAD_LINE 0.2 //in meters from LIDAR
+//#define OBSERVED_AREA 60 //in degrees
+//#define DEAD_LINE 0.2 //in meters from LIDAR
+
+double DEAD_LINE = 0.2;     //meters counted from LIDAR
+double OBSERVED_AREA = 60; // degrees
 
 bool obstacle = 0;
 bool info = 0;
+bool recovery_mode = 0;
 double deg_per_angle = 0;
+long double loop_rate = 10;
 
 void move_forward(const ros::Publisher &, double);
 void turn_left(const ros::Publisher &, double, bool dist);
 void turn_right(const ros::Publisher &, double, bool dist);
-void retreat(const ros::Publisher &, double, double stop_time);
+void retreat(const ros::Publisher &, double, double stop_time, double angle);
 bool check_lidar_data(const sensor_msgs::LaserScan &ms);
 
 
 void scanCallback(const sensor_msgs::LaserScan &ms)
 {
-
   if(check_lidar_data(ms) == 1)
-    obstacle = 1;
+    recovery_mode = 1;
+//  lidar_rate = ms.time_increment;
 }
-void recoveryCallback(const std_msgs::Bool &ms)
-{
-  obstacle = ms.data;
-  if(obstacle == 0)
-    std::cout  << " normal_mode info\n";
-  else
-    std::cout << " recover info\n";
-}
-
-
-
 
 int main(int argc, char **argv)
 {
+  using namespace std;
 
-  if(argc != 2 || argc != 3)
+  if(argc != 1 && argc != 2 && argc != 3)
   {
-    std:: cout << "use one or zero parameters\n";
+    std:: cout << "use one, two or zero parameters\n";
     return 0;
   }
 
@@ -66,106 +59,56 @@ int main(int argc, char **argv)
 
   ros::Publisher drive_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>("/drive", 50);
   ros::Subscriber scan_sub = n.subscribe("/scan", 1000, scanCallback);
-  ros::Subscriber obstacle_sub = n.subscribe("/recovery_mode", 1000, recoveryCallback);
-  if(argc == 2)
+//  ros::Subscriber obstacle_sub = n.subscribe("/recovery_mode", 1000, recoveryCallback);
+  if(argc == 1)
   {
+    char nr = argv[1][0];;
+    int desired_speed = (int)nr - 48;
+    std::cout << desired_speed << std::endl;
+    ros::Rate r(loop_rate);
     while(ros::ok())
     {
-      ros::spinOnce();
-      if(obstacle == 0)
+      if(recovery_mode == 0)
       {
-        std::cout << "in forward move\n";
-      //  move_forward(drive_pub, 0);
-      }else
-      {
-        std::cout << "in recovery mode\n";
-      //  retreat(drive_pub, 0.4, 1);
-      }
-    }
-  }else
-  {
-    while(ros::ok())
-    {
-      ros::spinOnce();
-      if(obstacle == 0)
-      {
-        x//std::cout << "in forward move\n";
-       move_forward(drive_pub, 0);
+      //  std::cout << "in forward move\n";
+        move_forward(drive_pub, 0); //sending drive commands from selfie_control
       }else
       {
       //  std::cout << "in recovery mode\n";
-        retreat(drive_pub, 0.4, 1);
+        retreat(drive_pub, 0.4, 1, 0);
       }
+      ros::spinOnce();
     }
   }
+  if(argc == 3)
+  {
+    char x = argv[1][0];;
+    OBSERVED_AREA = (double)x - 48;
+    x = argv[2][0];
+    DEAD_LINE = ((double)x - 48)/10;
+    cout << "observed_area [degrees] = " << OBSERVED_AREA<<endl;
+    cout << "dead_line [meters/10] = " << DEAD_LINE <<endl;
 
-  ros::spinOnce();
+    ros::Rate r(loop_rate);
+    while(ros::ok())
+    {
+//      cout << lidar_rate << endl;
+      if(recovery_mode == 0)
+      {
+      //  std::cout << "in forward move\n";
+        move_forward(drive_pub, 0); //sending drive commands from selfie_control
+      }else
+      {
+      //  std::cout << "in recovery mode\n";
+        retreat(drive_pub, 0.4, 1, 0);
+      }
+      ros::spinOnce();
+    }
+  }
   return 0;
 }
 
-void move_forward(const ros::Publisher &n, double dist)
-{
-  ackermann_msgs::AckermannDriveStamped drive_slow;
-  drive_slow.drive.speed = 0.2;
-  drive_slow.drive.acceleration = 0;
-  drive_slow.drive.jerk = 0;
-  drive_slow.drive.steering_angle = 0;
-  drive_slow.drive.steering_angle_velocity = 0;
-  n.publish(drive_slow);
-//  ros::Duration(dist/DRIVE_SPEED).sleep();
-}
 
-void retreat(const ros::Publisher &n, double dist, double stop_time)
-{
-
-  std::cout << "retreating\n";
-  ackermann_msgs::AckermannDriveStamped drive_slow;
-  drive_slow.drive.speed = 0;
-  drive_slow.drive.acceleration = 0;
-  drive_slow.drive.jerk = 0;
-  drive_slow.drive.steering_angle = 0;
-  drive_slow.drive.steering_angle_velocity = 0;
-  n.publish(drive_slow);
-  ros::Duration(stop_time).sleep();
-
-  drive_slow.drive.speed = -0.2;
-  drive_slow.drive.acceleration = 0;
-  drive_slow.drive.jerk = 0;
-  drive_slow.drive.steering_angle = 0;
-  drive_slow.drive.steering_angle_velocity = 0;
-  n.publish(drive_slow);
-  ros::Duration(dist/DRIVE_SPEED).sleep();
-}
-
-void turn_left(const ros::Publisher &n, double dist, bool forward)
-{
-  ackermann_msgs::AckermannDriveStamped left;
-  if(forward == true)
-    left.drive.speed = 0.2;
-  else
-    left.drive.speed = -0.2;
-  left.drive.acceleration = 0;
-  left.drive.jerk = 0;
-  left.drive.steering_angle = MAX_ANGLE;
-  left.drive.steering_angle_velocity = 0;
-  n.publish(left);
-  ros::Duration(DRIVE_SPEED/dist).sleep();
-}
-
-void turn_right(const ros::Publisher &n, double dist, bool forward)
-{
-  ackermann_msgs::AckermannDriveStamped right;
-  if(forward == true)
-    right.drive.speed = 0.2;
-  else
-    right.drive.speed = -0.2;
-  right.drive.acceleration = 0;
-  right.drive.jerk = 0;
-  right.drive.steering_angle = -MAX_ANGLE;
-  right.drive.steering_angle_velocity = 0;
-  n.publish(right);
-  ros::Duration(DRIVE_SPEED/dist).sleep();
-}
 
 bool check_lidar_data(const sensor_msgs::LaserScan &ms)
 {
