@@ -22,6 +22,7 @@
 #define RIGHT 1
 #define PI 3.1415926
 #define MAX_ANGLE 0.7
+#define OBSERVED_SIDE_ANGLE 0.
 //#define OBSERVED_AREA 60 //in degrees
 //#define DEAD_LINE 0.2 //in meters from LIDAR
 
@@ -39,13 +40,18 @@ void move_forward(const ros::Publisher &, double);
 void turn_left(const ros::Publisher &, double, bool dist);
 void turn_right(const ros::Publisher &, double, bool dist);
 void retreat(const ros::Publisher &, double, double stop_time, double angle);
-bool check_lidar_data(const sensor_msgs::LaserScan &ms);
+bool check_lidar_data(const sensor_msgs::LaserScan &ms, int observed_angles, int observation_center);
+double check_sides(const sensor_msgs::LaserScan &ms, int observed_angles);
+float diff = 0;
+
 
 
 void scanCallback(const sensor_msgs::LaserScan &ms)
 {
-  if(check_lidar_data(ms) == 1)
+  if(check_lidar_data(ms, OBSERVED_ANGLE, 90) == 1)
     recovery_mode = 1;
+
+//  diff = check_sides(ms, OBSERVED_SIDE_ANGLE);
 //  lidar_rate = ms.time_increment;
 }
 
@@ -63,7 +69,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   ros::Publisher drive_pub = n.advertise<ackermann_msgs::AckermannDriveStamped>("/drive", 50);
-  ros::Publisher center__dist = n.advertise<std_msgs::Float32>("/from_right", 50);
+  ros::Publisher center_dist = n.advertise<std_msgs::Float32>("/from_right", 50);
   ros::Subscriber scan_sub = n.subscribe("/scan", 1000, scanCallback);
 //  ros::Subscriber obstacle_sub = n.subscribe("/recovery_mode", 1000, recoveryCallback);
   if(argc == 1)
@@ -117,7 +123,11 @@ int main(int argc, char **argv)
       if(recovery_mode == 0)
       {
       //  std::cout << "in forward move\n";
+        std_msgs::Float32 left_right_diff;
+        left_right_diff.data = diff;
+        center_dist.publish(left_right_diff);
         move_forward(drive_pub, speed); //sending drive commands from selfie_control
+
       }else
       {
       //  std::cout << "in recovery mode\n";
@@ -131,17 +141,18 @@ int main(int argc, char **argv)
 }
 
 
-
-bool check_lidar_data(const sensor_msgs::LaserScan &ms)
+bool check_lidar_data(const sensor_msgs::LaserScan &ms, int observed_angles, int observation_center)
 {
   using namespace std;
   deg_per_angle = ms.angle_increment * 180/PI;
   int max_angle_nr = (ms.angle_max - ms.angle_min)/ms.angle_increment;
   cout << "mr of angles: " << max_angle_nr<<endl;
-  int center_angle_nr = max_angle_nr/2;
-  int observed_angles = OBSERVED_ANGLE/deg_per_angle;
+
+  int center_angle_nr = observation_center/2;
+  observed_angles = observed_angles/deg_per_angle;
   cout << "observed_angles: " << observed_angles<<endl;
   int n = center_angle_nr - observed_angles/2;
+  cout << "observed_angle[nr na 510]: " <<  n<<endl;
   double  min = 100;
   int min_nr = 0;
   double max = 0;
