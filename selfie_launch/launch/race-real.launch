@@ -1,0 +1,12 @@
+<launch>
+  <arg name="map_file" />
+  <arg name="path_file" />
+
+  <include file="$(find selfie_launch)/launch/subsystems/hardware.launch" />
+  <node pkg="selfie_odometry" type="selfie_odometry" name="selfie_odometry" />
+
+  <include file="$(find selfie_launch)/launch/race-base.launch">
+    <arg name="map_file" value="$(arg map_file)" />
+    <arg name="path_file" value="$(arg path_file)" />
+  </include>
+</launch>

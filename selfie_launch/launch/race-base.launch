@@ -1,0 +1,22 @@
+<launch>
+  <arg name="map_file" />
+  <arg name="path_file" />
+
+  <include file="$(find selfie_launch)/launch/subsystems/transforms.launch" />
+
+  <node pkg="map_server" type="map_server" name="map_server" args="$(arg map_file)" />
+  <node pkg="amcl" type="amcl" name="amcl" />
+  <node pkg="selfie_map_processing" type="offset_publisher.py" name="selfie_map_processing" args="$(arg path_file)" />
+
+  <include file="$(find selfie_control)/launch/pid.launch" />
+  <node pkg="selfie_control" type="pid_tuner.py" name="pid_tuner">
+    <param name="pid_node" value="position_pid" />
+    <param name="nominal_kp" value="0.005" />
+    <param name="nominal_ki" value="0.0" />
+    <param name="nominal_kd" value="0.005" />
+  </node>
+
+  <node pkg="selfie_control" type="angle_to_ackermann.py" name="cmd_converter">
+    <param name="speed" value="1.0" />
+  </node>
+</launch>
