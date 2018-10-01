@@ -1,6 +1,6 @@
 #include "spline.hpp"
 
-Point::Point(int param_x, int param_y)
+Point::Point(float param_x, float param_y)
 {
     x = param_x;
     y = param_y;

@@ -10,9 +10,9 @@
 class Point
 {
     public:
-    int x;
-    int y;
-    Point(int param_x, int param_y);
+    float x;
+    float y;
+    Point(float param_x,float param_y);
     Point();
 };
 
