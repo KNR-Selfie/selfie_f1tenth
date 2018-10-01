@@ -7,6 +7,7 @@ import math
 from ackermann_msgs.msg import AckermannDriveStamped
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Float64
 
 UPDATE_RATE = 50
 
@@ -132,8 +133,9 @@ if __name__ == '__main__':
     # Subscribe for steering commands
     drive_sub = rospy.Subscriber('drive', AckermannDriveStamped, handle_command, queue_size=1)
 
-    # Configure topic publisher
-    odom_pub = rospy.Publisher('sim/odom', Odometry, queue_size=UPDATE_RATE)
+    # Configure topic publishers
+    odom_pub = rospy.Publisher('odom', Odometry, queue_size=UPDATE_RATE)
+    speed_pub = rospy.Publisher('speed', Float64, queue_size=UPDATE_RATE)
 
     # Configure transform broadcaster
     tf_br = tf.TransformBroadcaster()
@@ -157,5 +159,9 @@ if __name__ == '__main__':
         # Publish to odometry topic
         odom_msg = construct_odom_msg(state, current_time, odom_frame, rear_axis_frame)
         odom_pub.publish(odom_msg)
+
+        # Publish to speed topic
+        speed = math.sqrt(state.vx**2 + state.vy**2)
+        speed_pub.publish(speed)
 
         rate.sleep()
