@@ -20,11 +20,12 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
     for(right_read_angle; right_read_angle >= scan.angle_min; right_read_angle -= scan.angle_increment){
         right_read_angle_index++;
     }
+    right_read_angle = scan.angle_max;
     float middle_sum = 0;
     float front_sum = 0;
     int counter = 0;
     right_read_angle_index = right_read_angle_index - ((scan.angle_max - min_angle) / scan.angle_increment);
-    left_read_angle_index = left_read_angle_index - ((scan.angle_min - min_angle )/ scan.angle_increment);
+    left_read_angle_index = left_read_angle_index + ((scan.angle_max - min_angle )/ scan.angle_increment);
     right_read_angle = min_angle;
     float left_read_angle = -1 * min_angle;
     for (float angle_counter = 0; angle_counter <= read_angle_range; angle_counter += scan.angle_increment){
@@ -47,7 +48,7 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
     
     float avr_front = front_sum / counter;
     float avr_middle = middle_sum / counter;
-    offset.data = avr_front - avr_middle;
+    offset.data = -1 * (avr_front - avr_middle);
     if(!(offset.data > -10 && offset.data < 10))
         offset.data = last_offset;  
     offset_pub.publish(offset);

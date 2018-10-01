@@ -14,6 +14,7 @@ def steering_angle_callback(msg):
 
     cmd.drive.steering_angle = msg.data
     cmd.drive.speed = speed
+    cmd.drive.steering_angle_velocity = 15.0
 
     drive_pub.publish(cmd)
 
