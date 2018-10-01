@@ -1,4 +1,7 @@
 <launch>
-    <node pkg="sick_tim" type="sick_tim551_2050001" name="lidar"/>
+    <node pkg="sick_tim" type="sick_tim551_2050001" name="lidar">
+      <param name="min_ang" value="-2.17" />
+      <param name="max_ang" value="2.17" />
+    </node>
     <node pkg="selfie_stm32_bridge" type="selfie_stm32_bridge" name="stm32"/>
 </launch>
