@@ -1,14 +1,14 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
-#include <std_msgs/Float32.h>
+#include <std_msgs/Float64.h>
 #include <math.h>
 
 sensor_msgs::LaserScan scan;
 
 ros::Publisher offset_pub;
-float min_angle = 0;
-float read_angle_range = M_PI/3;
-std_msgs::Float32 offset;
+float min_angle = M_PI/2;
+float read_angle_range = M_PI/4;
+std_msgs::Float64 offset;
 float last_offset = 0;
 
 void scanCallback(const sensor_msgs::LaserScan &msg){
@@ -20,7 +20,6 @@ void scanCallback(const sensor_msgs::LaserScan &msg){
     for(right_read_angle; right_read_angle >= scan.angle_min; right_read_angle -= scan.angle_increment){
         right_read_angle_index++;
     }
-
     float middle_sum = 0;
     float front_sum = 0;
     int counter = 0;
@@ -60,7 +59,7 @@ int main(int argc, char** argv){
     ros::NodeHandle n("~");
     offset.data = 0;
 
-    offset_pub = n.advertise<std_msgs::Float32>("/offset", 50);
+    offset_pub = n.advertise<std_msgs::Float64>("/steering_state", 50);
     ros::Subscriber sub_scan = n.subscribe("/scan", 50, scanCallback);
     
     ros::Rate loop_rate(15);
