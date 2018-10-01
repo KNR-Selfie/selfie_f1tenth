@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "selfie_trajectory");
     ros::NodeHandle n;
     
-    ros::Publisher out_publisher = n.advertise<ackermann_msgs::AckermannDrive>("/ack_output", 50);
+    ros::Publisher out_publisher = n.advertise<ackermann_msgs::AckermannDriveStamped>("/drive", 50);
     ros::Publisher path_publisher = n.advertise<nav_msgs::Path>("/path_m", 50);
     ros::Subscriber laserScan_subscriber = n.subscribe("/scan", 50, laserScanCallback);
 
@@ -83,9 +83,9 @@ int main(int argc, char** argv)
         }
         path_publisher.publish(path_msg);
               
-        ackermann_msgs::AckermannDrive output_ackermann;
-        output_ackermann.steering_angle = angle;
-        output_ackermann.speed = velocity;
+        ackermann_msgs::AckermannDriveStamped output_ackermann;
+        output_ackermann.drive.steering_angle = angle;
+        output_ackermann.drive.speed = velocity;
         out_publisher.publish(output_ackermann);
 
         loop_rate.sleep();
