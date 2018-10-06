@@ -2,7 +2,7 @@
 
 import rospy
 
-from std_msgs.msg import Float64
+from std_msgs.msg import Float32
 from dynamic_reconfigure.client import Client
 from selfie_control.cfg import ControlConfig
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     global pid_client
     pid_client = Client(pid_node)
 
-    speed_sub = rospy.Subscriber('/speed', Float64, speed_callback, queue_size=1)
+    speed_sub = rospy.Subscriber('/speed', Float32, speed_callback, queue_size=1)
 
     # Set update/publishing rate
     rate = rospy.Rate(UPDATE_RATE)
