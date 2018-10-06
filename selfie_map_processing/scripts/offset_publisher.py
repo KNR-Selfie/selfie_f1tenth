@@ -71,7 +71,7 @@ if __name__ == '__main__':
         point = (x, y)
         current_idx = np.argmin(np.sum(np.square(np.array(point) - pathpoints), 1))
         current_point = pathpoints[current_idx]
-        next_idx = (current_idx + 1) % len(pathpoints)
+        next_idx = (current_idx + 2) % len(pathpoints)
         next_point = pathpoints[next_idx]
         alpha = math.atan2(next_point[1] - current_point[1],
                            next_point[0] - current_point[0])

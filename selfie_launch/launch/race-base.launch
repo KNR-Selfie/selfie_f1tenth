@@ -11,7 +11,7 @@
   <include file="$(find selfie_control)/launch/pid.launch" />
   <node pkg="selfie_control" type="pid_tuner.py" name="pid_tuner">
     <param name="pid_node" value="position_pid" />
-    <param name="nominal_kp" value="0.005" />
+    <param name="nominal_kp" value="0.0075" />
     <param name="nominal_ki" value="0.0" />
     <param name="nominal_kd" value="0.005" />
   </node>
