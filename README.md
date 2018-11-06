@@ -13,7 +13,7 @@ The repository should be placed in the [source space](http://wiki.ros.org/catkin
 
 ```bash
 cd ~/catkin_ws/src
-git clone https://github.com/Goldob/selfie_f1tenth
+git clone https://github.com/KNR-Selfie/selfie_f1tenth
 ```
 ### Resolving dependencies
 
@@ -26,6 +26,6 @@ rosdep install --from-paths src --ignore-src -r -y
 
 ```bash
 cd ~/catkin_ws
-source ./devel/setup.bash
 catkin_make
+source ./devel/setup.bash
 ```
